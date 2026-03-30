@@ -24,8 +24,8 @@
         .game-container {
             background: white;
             border-radius: 24px;
-            padding: 40px;
-            max-width: 700px;
+            padding: 36px;
+            max-width: 720px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
@@ -34,44 +34,89 @@
         h1 {
             font-size: 2em;
             color: #4a3f8a;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .subtitle {
             color: #888;
-            font-size: 1.1em;
-            margin-bottom: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
         }
 
-        .score-bar {
+        /* ── pasek stanu ── */
+        .status-bar {
             display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-            color: #555;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
         }
 
-        .score-bar span {
+        .status-pill {
             background: #f0f0f0;
             padding: 8px 16px;
             border-radius: 12px;
+            font-size: 1em;
+            color: #555;
+            white-space: nowrap;
         }
 
+        /* ── licznik czasu ── */
+        .timer-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .timer-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4a3f8a;
+            line-height: 1;
+            transition: color 0.4s;
+        }
+
+        .timer-display.warn   { color: #e67e22; }
+        .timer-display.danger { color: #e74c3c; }
+
+        .timer-bar-track {
+            width: 100%;
+            max-width: 160px;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            background: #4a3f8a;
+            border-radius: 4px;
+            transition: width 1s linear, background 0.4s;
+        }
+
+        .timer-bar-fill.warn   { background: #e67e22; }
+        .timer-bar-fill.danger { background: #e74c3c; }
+
+        /* ── zdanie ── */
         .sentence-box {
             background: #f8f6ff;
             border: 3px solid #d4ccf7;
             border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 24px;
-            font-size: 1.5em;
-            line-height: 1.6;
+            padding: 28px 24px 20px;
+            margin-bottom: 18px;
+            font-size: 1.45em;
+            line-height: 1.7;
             color: #333;
         }
 
         .blank {
             display: inline-block;
-            min-width: 120px;
+            min-width: 110px;
             border-bottom: 3px dashed #764ba2;
             color: #764ba2;
             font-weight: bold;
@@ -80,38 +125,80 @@
 
         .hint {
             color: #999;
-            font-size: 0.9em;
+            font-size: 0.78em;
             margin-top: 10px;
             font-style: italic;
         }
 
+        /* ── sugestie ── */
+        .suggestions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .suggestion {
+            background: #f0eeff;
+            border: 2px solid #c9bef5;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .suggestion.reveal-correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .suggestion.reveal-wrong {
+            background: #f0f0f0;
+            border-color: #ccc;
+            color: #aaa;
+        }
+
+        .suggestion-letter {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #764ba2;
+            min-width: 22px;
+        }
+
+        .suggestion.reveal-correct .suggestion-letter { color: #155724; }
+        .suggestion.reveal-wrong   .suggestion-letter { color: #aaa; }
+
+        /* ── pole wpisywania ── */
         .input-area {
             display: flex;
             gap: 12px;
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .input-area input {
-            font-size: 1.3em;
-            padding: 12px 20px;
+            font-size: 1.25em;
+            padding: 12px 18px;
             border: 3px solid #d4ccf7;
             border-radius: 12px;
             outline: none;
-            width: 260px;
+            width: 240px;
             text-align: center;
             transition: border-color 0.2s;
         }
 
-        .input-area input:focus {
-            border-color: #764ba2;
-        }
+        .input-area input:focus { border-color: #764ba2; }
+        .input-area input.correct { border-color: #28a745; background: #f0fff4; }
+        .input-area input.wrong   { border-color: #e74c3c; background: #fff5f5; }
 
         .input-area button {
-            font-size: 1.2em;
-            padding: 12px 28px;
+            font-size: 1.15em;
+            padding: 12px 26px;
             background: #764ba2;
             color: white;
             border: none;
@@ -120,21 +207,21 @@
             transition: background 0.2s;
         }
 
-        .input-area button:hover {
-            background: #5a3880;
-        }
+        .input-area button:hover:not(:disabled) { background: #5a3880; }
+        .input-area button:disabled { background: #bbb; cursor: default; }
 
+        /* ── klawiatura polska ── */
         .polish-keys {
             display: flex;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: wrap;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
 
         .polish-keys button {
-            font-size: 1.1em;
-            padding: 8px 14px;
+            font-size: 1.05em;
+            padding: 7px 12px;
             background: #eee;
             border: 2px solid #ccc;
             border-radius: 8px;
@@ -142,35 +229,27 @@
             transition: background 0.15s;
         }
 
-        .polish-keys button:hover {
-            background: #d4ccf7;
-        }
+        .polish-keys button:hover { background: #d4ccf7; }
 
+        /* ── feedback ── */
         .feedback {
-            font-size: 1.3em;
-            padding: 16px;
+            font-size: 1.2em;
+            padding: 14px;
             border-radius: 12px;
-            margin-bottom: 20px;
-            min-height: 56px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .feedback.correct {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .feedback.wrong {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .feedback.hidden {
+            gap: 10px;
+            min-height: 52px;
             visibility: hidden;
         }
 
+        .feedback.correct { background: #d4edda; color: #155724; visibility: visible; }
+        .feedback.wrong   { background: #f8d7da; color: #721c24; visibility: visible; }
+        .feedback.timeout { background: #fff3cd; color: #856404; visibility: visible; }
+
+        /* ── przycisk dalej ── */
         .next-btn {
             font-size: 1.1em;
             padding: 12px 32px;
@@ -182,30 +261,34 @@
             transition: background 0.2s;
         }
 
-        .next-btn:hover {
-            background: #5568d3;
-        }
+        .next-btn:hover { background: #5568d3; }
+        .next-btn.hidden { display: none; }
 
-        .next-btn.hidden {
-            display: none;
-        }
-
-        /* Ekran końcowy */
-        .end-screen {
-            display: none;
-        }
+        /* ── ekran końcowy ── */
+        .end-screen { display: none; }
 
         .end-screen h2 {
             font-size: 1.8em;
             color: #4a3f8a;
+            margin-bottom: 12px;
+        }
+
+        .final-score {
+            font-size: 3.5em;
+            color: #764ba2;
+            font-weight: bold;
+            margin: 16px 0 8px;
+        }
+
+        .final-max {
+            color: #aaa;
+            font-size: 1em;
             margin-bottom: 16px;
         }
 
-        .end-screen .final-score {
-            font-size: 3em;
-            color: #764ba2;
-            font-weight: bold;
-            margin: 20px 0;
+        .end-screen p#end-message {
+            font-size: 1.2em;
+            color: #555;
         }
 
         .end-screen button {
@@ -216,215 +299,360 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 24px;
         }
 
-        .end-screen button:hover {
-            background: #5a3880;
+        .end-screen button:hover { background: #5a3880; }
+
+        /* punkty animowane */
+        @keyframes pop {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.4); }
+            100% { transform: scale(1); }
         }
+        .pop { animation: pop 0.35s ease; }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <!-- Ekran gry -->
-        <div id="game-screen">
-            <h1>Polskie Słówka</h1>
-            <p class="subtitle">Wpisz brakujące słowo w zdaniu</p>
+<div class="game-container">
 
-            <div class="score-bar">
-                <span>Pytanie: <strong id="question-num">1</strong> / <strong id="question-total">10</strong></span>
-                <span>Wynik: <strong id="score">0</strong></span>
-            </div>
+    <!-- ═══ EKRAN GRY ═══ -->
+    <div id="game-screen">
+        <h1>Polskie Słówka</h1>
+        <p class="subtitle">Wpisz brakujące słowo w zdaniu</p>
 
-            <div class="sentence-box">
-                <p id="sentence"></p>
-                <p class="hint" id="hint"></p>
-            </div>
+        <div class="status-bar">
+            <div class="status-pill">Pytanie: <strong id="question-num">1</strong>&nbsp;/&nbsp;<strong id="question-total">20</strong></div>
 
-            <div class="feedback hidden" id="feedback"></div>
-
-            <div id="input-section">
-                <div class="input-area">
-                    <input type="text" id="answer-input" placeholder="Wpisz słowo..." autocomplete="off">
-                    <button id="check-btn" onclick="checkAnswer()">Sprawdź</button>
-                </div>
-
-                <div class="polish-keys">
-                    <button onclick="insertChar('ą')">ą</button>
-                    <button onclick="insertChar('ć')">ć</button>
-                    <button onclick="insertChar('ę')">ę</button>
-                    <button onclick="insertChar('ł')">ł</button>
-                    <button onclick="insertChar('ń')">ń</button>
-                    <button onclick="insertChar('ó')">ó</button>
-                    <button onclick="insertChar('ś')">ś</button>
-                    <button onclick="insertChar('ź')">ź</button>
-                    <button onclick="insertChar('ż')">ż</button>
+            <div class="timer-wrap">
+                <div class="timer-display" id="timer-display">60</div>
+                <div class="timer-bar-track">
+                    <div class="timer-bar-fill" id="timer-bar"></div>
                 </div>
             </div>
 
-            <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Następne pytanie</button>
+            <div class="status-pill">Wynik: <strong id="score">0</strong> pkt</div>
         </div>
 
-        <!-- Ekran końcowy -->
-        <div id="end-screen" class="end-screen">
-            <h2>Koniec gry!</h2>
-            <p>Twój wynik:</p>
-            <div class="final-score" id="final-score"></div>
-            <p id="end-message"></p>
-            <button onclick="restartGame()">Zagraj ponownie</button>
+        <div class="sentence-box">
+            <p id="sentence"></p>
+            <p class="hint" id="hint"></p>
         </div>
+
+        <!-- sugestie (tylko do wglądu) -->
+        <div class="suggestions" id="suggestions"></div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div id="input-section">
+            <div class="input-area">
+                <input type="text" id="answer-input" placeholder="Wpisz słowo…" autocomplete="off">
+                <button id="check-btn" onclick="checkAnswer()">Sprawdź</button>
+            </div>
+
+            <div class="polish-keys">
+                <button onclick="insertChar('ą')">ą</button>
+                <button onclick="insertChar('ć')">ć</button>
+                <button onclick="insertChar('ę')">ę</button>
+                <button onclick="insertChar('ł')">ł</button>
+                <button onclick="insertChar('ń')">ń</button>
+                <button onclick="insertChar('ó')">ó</button>
+                <button onclick="insertChar('ś')">ś</button>
+                <button onclick="insertChar('ź')">ź</button>
+                <button onclick="insertChar('ż')">ż</button>
+            </div>
+        </div>
+
+        <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Następne pytanie ▶</button>
     </div>
 
-    <script>
-        const QUESTIONS = [
-            { sentence: "Mama piecze ___ na urodziny.", answer: "tort", hint: "Coś słodkiego ze świeczkami" },
-            { sentence: "W nocy na niebie świeci ___.", answer: "księżyc", hint: "Jest okrągły i jasny" },
-            { sentence: "Pies macha ___ na powitanie.", answer: "ogonem", hint: "Pies ma to z tyłu" },
-            { sentence: "Rano jem ___ na śniadanie.", answer: "kanapkę", hint: "Coś z chlebem" },
-            { sentence: "___ mieszka w lesie i zbiera orzechy.", answer: "wiewiórka", hint: "Małe rude zwierzątko z puszystym ogonem" },
-            { sentence: "Dzieci bawią się na ___.", answer: "podwórku", hint: "Miejsce przed domem do zabawy" },
-            { sentence: "Zimą pada biały ___.", answer: "śnieg", hint: "Można z niego lepić bałwana" },
-            { sentence: "Kot pije ___ z miski.", answer: "mleko", hint: "Biały napój" },
-            { sentence: "Tata czyta ___ przed snem.", answer: "bajkę", hint: "Historia z książki" },
-            { sentence: "___ pływa w stawie.", answer: "żaba", hint: "Zielona i kumka" },
-            { sentence: "W szkole piszemy w ___.", answer: "zeszycie", hint: "Ma kartki w linie lub kratkę" },
-            { sentence: "Ptaki budują ___ na drzewie.", answer: "gniazdo", hint: "Dom dla ptaków" },
-            { sentence: "Samochód jedzie po ___.", answer: "drodze", hint: "Asfaltowa nawierzchnia" },
-            { sentence: "Ryby pływają w ___.", answer: "morzu", hint: "Duży zbiornik słonej wody" },
-            { sentence: "Słońce wschodzi ___.", answer: "rano", hint: "Pora dnia, kiedy się budzimy" },
-            { sentence: "___ daje nam miód.", answer: "pszczoła", hint: "Latający owad w żółto-czarne paski" },
-            { sentence: "Na obiad jemy ___ z klopsikami.", answer: "makaron", hint: "Długie lub krótkie, gotowane w wodzie" },
-            { sentence: "W zimie nosimy czapkę i ___.", answer: "szalik", hint: "Owijamy nim szyję" },
-            { sentence: "Babcia robi na drutach ___.", answer: "sweter", hint: "Ciepłe ubranie wkładane przez głowę" },
-            { sentence: "Listonosz przynosi ___.", answer: "listy", hint: "Wkłada je do skrzynki pocztowej" },
-        ];
+    <!-- ═══ EKRAN KOŃCOWY ═══ -->
+    <div id="end-screen" class="end-screen">
+        <h2>Koniec gry!</h2>
+        <p>Twój wynik:</p>
+        <div class="final-score" id="final-score"></div>
+        <div class="final-max" id="final-max"></div>
+        <p id="end-message"></p>
+        <button onclick="restartGame()">Zagraj ponownie</button>
+    </div>
 
-        let currentIndex = 0;
-        let score = 0;
-        let shuffled = [];
-        let answered = false;
+</div>
 
-        function shuffle(arr) {
-            const a = [...arr];
-            for (let i = a.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [a[i], a[j]] = [a[j], a[i]];
-            }
-            return a;
+<script>
+const QUESTIONS = [
+    { sentence: "Mama piecze ___ na urodziny.",               answer: "tort",       hint: "Coś słodkiego ze świeczkami" },
+    { sentence: "W nocy na niebie świeci ___.",                answer: "księżyc",   hint: "Jest okrągły i jasny" },
+    { sentence: "Pies macha ___ na powitanie.",               answer: "ogonem",    hint: "Pies ma to z tyłu" },
+    { sentence: "Rano jem ___ na śniadanie.",                 answer: "kanapkę",   hint: "Coś z chlebem" },
+    { sentence: "___ mieszka w lesie i zbiera orzechy.",      answer: "wiewiórka", hint: "Małe rude zwierzątko z puszystym ogonem" },
+    { sentence: "Dzieci bawią się na ___.",                   answer: "podwórku",  hint: "Miejsce przed domem do zabawy" },
+    { sentence: "Zimą pada biały ___.",                       answer: "śnieg",     hint: "Można z niego lepić bałwana" },
+    { sentence: "Kot pije ___ z miski.",                      answer: "mleko",     hint: "Biały napój" },
+    { sentence: "Tata czyta ___ przed snem.",                 answer: "bajkę",     hint: "Historia z książki" },
+    { sentence: "___ pływa w stawie.",                        answer: "żaba",      hint: "Zielona i kumka" },
+    { sentence: "W szkole piszemy w ___.",                    answer: "zeszycie",  hint: "Ma kartki w linie lub kratkę" },
+    { sentence: "Ptaki budują ___ na drzewie.",               answer: "gniazdo",   hint: "Dom dla ptaków" },
+    { sentence: "Samochód jedzie po ___.",                    answer: "drodze",    hint: "Asfaltowa nawierzchnia" },
+    { sentence: "Ryby pływają w ___.",                        answer: "morzu",     hint: "Duży zbiornik słonej wody" },
+    { sentence: "Słońce wschodzi ___.",                       answer: "rano",      hint: "Pora dnia, kiedy się budzimy" },
+    { sentence: "___ daje nam miód.",                         answer: "pszczoła",  hint: "Latający owad w żółto-czarne paski" },
+    { sentence: "Na obiad jemy ___ z klopsikami.",            answer: "makaron",   hint: "Długie lub krótkie, gotowane w wodzie" },
+    { sentence: "W zimie nosimy czapkę i ___.",               answer: "szalik",    hint: "Owijamy nim szyję" },
+    { sentence: "Babcia robi na drutach ___.",                answer: "sweter",    hint: "Ciepłe ubranie wkładane przez głowę" },
+    { sentence: "Listonosz przynosi ___.",                    answer: "listy",     hint: "Wkłada je do skrzynki pocztowej" },
+];
+
+const LETTERS = ['A', 'B', 'C', 'D'];
+const MAX_TIME = 60;
+
+let currentIndex = 0;
+let score = 0;
+let totalMax = 0;
+let shuffled = [];
+let answered = false;
+let timeLeft = MAX_TIME;
+let timerInterval = null;
+
+/* ── narzędzia ── */
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function normalize(str) {
+    return str.toLowerCase().trim()
+        .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e')
+        .replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o')
+        .replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z');
+}
+
+function calcPoints(secondsLeft) {
+    // 10 pkt za błyskawiczną odpowiedź, proporcjonalnie mniej — minimum 1
+    return Math.max(1, Math.round(10 * secondsLeft / MAX_TIME));
+}
+
+/* ── timer ── */
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = MAX_TIME;
+    updateTimerUI();
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI();
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            onTimeout();
         }
+    }, 1000);
+}
 
-        function normalize(str) {
-            return str.toLowerCase().trim()
-                .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e')
-                .replace(/ł/g, 'l').replace(/ń/g, 'n').replace(/ó/g, 'o')
-                .replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z');
+function stopTimer() {
+    clearInterval(timerInterval);
+}
+
+function updateTimerUI() {
+    const pct = timeLeft / MAX_TIME;
+    const display = document.getElementById('timer-display');
+    const bar = document.getElementById('timer-bar');
+    const cls = pct > 0.4 ? '' : pct > 0.2 ? 'warn' : 'danger';
+
+    display.textContent = timeLeft;
+    display.className = 'timer-display ' + cls;
+    bar.style.width = (pct * 100) + '%';
+    bar.className = 'timer-bar-fill ' + cls;
+}
+
+function onTimeout() {
+    if (answered) return;
+    answered = true;
+    const q = shuffled[currentIndex];
+
+    document.getElementById('answer-input').disabled = true;
+    document.getElementById('check-btn').disabled = true;
+
+    const fb = document.getElementById('feedback');
+    fb.textContent = '⏰ Czas minął! Poprawna odpowiedź: ' + q.answer;
+    fb.className = 'feedback timeout';
+
+    revealSuggestions(null);
+    document.getElementById('next-btn').classList.remove('hidden');
+    document.getElementById('next-btn').focus();
+}
+
+/* ── sugestie ── */
+function buildSuggestions(correctAnswer) {
+    // zbierz 3 losowe błędne odpowiedzi z puli
+    const pool = shuffled
+        .map(q => q.answer)
+        .filter(a => normalize(a) !== normalize(correctAnswer));
+    const distractors = shuffle(pool).slice(0, 3);
+    const options = shuffle([correctAnswer, ...distractors]);
+    return options;
+}
+
+function renderSuggestions(options) {
+    const container = document.getElementById('suggestions');
+    container.innerHTML = '';
+    options.forEach((opt, i) => {
+        const div = document.createElement('div');
+        div.className = 'suggestion';
+        div.id = 'sug-' + i;
+        div.innerHTML = `<span class="suggestion-letter">${LETTERS[i]}</span>${opt}`;
+        container.appendChild(div);
+    });
+    // zachowaj listę opcji w danych
+    container.dataset.options = JSON.stringify(options);
+}
+
+function revealSuggestions(correctAnswer) {
+    const container = document.getElementById('suggestions');
+    const options = JSON.parse(container.dataset.options || '[]');
+    options.forEach((opt, i) => {
+        const div = document.getElementById('sug-' + i);
+        if (!div) return;
+        const isCorrect = correctAnswer
+            ? normalize(opt) === normalize(correctAnswer)
+            : normalize(opt) === normalize(shuffled[currentIndex].answer);
+        div.className = 'suggestion ' + (isCorrect ? 'reveal-correct' : 'reveal-wrong');
+    });
+}
+
+/* ── pytanie ── */
+function showQuestion() {
+    const q = shuffled[currentIndex];
+    const parts = q.sentence.split('___');
+    document.getElementById('sentence').innerHTML =
+        parts[0] + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + parts[1];
+    document.getElementById('hint').textContent = 'Podpowiedź: ' + q.hint;
+    document.getElementById('question-num').textContent = currentIndex + 1;
+
+    const input = document.getElementById('answer-input');
+    input.value = '';
+    input.disabled = false;
+    input.className = '';
+    document.getElementById('check-btn').disabled = false;
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('next-btn').classList.add('hidden');
+
+    const options = buildSuggestions(q.answer);
+    renderSuggestions(options);
+
+    answered = false;
+    startTimer();
+    input.focus();
+}
+
+/* ── sprawdzanie ── */
+function checkAnswer() {
+    if (answered) return;
+    const input = document.getElementById('answer-input');
+    const val = input.value.trim();
+    if (val === '') return;
+
+    stopTimer();
+    answered = true;
+
+    const q = shuffled[currentIndex];
+    const isCorrect = normalize(val) === normalize(q.answer);
+    const fb = document.getElementById('feedback');
+
+    if (isCorrect) {
+        const pts = calcPoints(timeLeft);
+        score += pts;
+        totalMax += 10;
+        document.getElementById('score').textContent = score;
+
+        // animacja wyniku
+        const scoreEl = document.getElementById('score');
+        scoreEl.classList.remove('pop');
+        void scoreEl.offsetWidth;
+        scoreEl.classList.add('pop');
+
+        input.className = 'correct';
+        fb.innerHTML = `✅ Brawo! +${pts} pkt${pts === 10 ? ' 🎉' : ''}`;
+        fb.className = 'feedback correct';
+    } else {
+        totalMax += 10;
+        input.className = 'wrong';
+        fb.textContent = '❌ Niestety! Poprawna odpowiedź: ' + q.answer;
+        fb.className = 'feedback wrong';
+    }
+
+    input.disabled = true;
+    document.getElementById('check-btn').disabled = true;
+    revealSuggestions(q.answer);
+    document.getElementById('next-btn').classList.remove('hidden');
+    document.getElementById('next-btn').focus();
+}
+
+/* ── następne / koniec ── */
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex >= shuffled.length) {
+        showEndScreen();
+    } else {
+        showQuestion();
+    }
+}
+
+function showEndScreen() {
+    stopTimer();
+    document.getElementById('game-screen').style.display = 'none';
+    const end = document.getElementById('end-screen');
+    end.style.display = 'block';
+
+    document.getElementById('final-score').textContent = score + ' pkt';
+    document.getElementById('final-max').textContent = 'maks. możliwe: ' + shuffled.length * 10 + ' pkt';
+
+    const pct = score / (shuffled.length * 10);
+    let msg;
+    if (pct >= 0.95) msg = 'Perfekcyjnie! Jesteś mistrzem polskich słówek! 🏆';
+    else if (pct >= 0.75) msg = 'Świetny wynik! Tak trzymaj! 🌟';
+    else if (pct >= 0.5)  msg = 'Dobra robota! Ćwicz dalej! 💪';
+    else                  msg = 'Nie poddawaj się! Spróbuj jeszcze raz! 😊';
+    document.getElementById('end-message').textContent = msg;
+}
+
+/* ── restart ── */
+function restartGame() {
+    currentIndex = 0;
+    score = 0;
+    totalMax = 0;
+    document.getElementById('score').textContent = '0';
+    shuffled = shuffle(QUESTIONS);
+    document.getElementById('question-total').textContent = shuffled.length;
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = '';
+    showQuestion();
+}
+
+/* ── polskie znaki ── */
+function insertChar(ch) {
+    const input = document.getElementById('answer-input');
+    if (input.disabled) return;
+    const s = input.selectionStart, e = input.selectionEnd;
+    input.value = input.value.substring(0, s) + ch + input.value.substring(e);
+    input.selectionStart = input.selectionEnd = s + 1;
+    input.focus();
+}
+
+/* ── klawiatura ── */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        if (!answered) {
+            checkAnswer();
+        } else {
+            nextQuestion();
         }
+    }
+});
 
-        function showQuestion() {
-            const q = shuffled[currentIndex];
-            const parts = q.sentence.split('___');
-            document.getElementById('sentence').innerHTML =
-                parts[0] + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + parts[1];
-            document.getElementById('hint').textContent = 'Podpowiedź: ' + q.hint;
-            document.getElementById('question-num').textContent = currentIndex + 1;
-            document.getElementById('answer-input').value = '';
-            document.getElementById('answer-input').disabled = false;
-            document.getElementById('check-btn').disabled = false;
-            document.getElementById('feedback').className = 'feedback hidden';
-            document.getElementById('next-btn').classList.add('hidden');
-            document.getElementById('input-section').style.display = '';
-            document.getElementById('answer-input').focus();
-            answered = false;
-        }
-
-        function checkAnswer() {
-            if (answered) return;
-            const input = document.getElementById('answer-input').value;
-            if (input.trim() === '') return;
-
-            const q = shuffled[currentIndex];
-            const isCorrect = normalize(input) === normalize(q.answer);
-            const fb = document.getElementById('feedback');
-
-            answered = true;
-
-            if (isCorrect) {
-                score++;
-                document.getElementById('score').textContent = score;
-                fb.textContent = 'Brawo! Odpowiedź jest poprawna!';
-                fb.className = 'feedback correct';
-            } else {
-                fb.textContent = 'Niestety! Poprawna odpowiedź to: ' + q.answer;
-                fb.className = 'feedback wrong';
-            }
-
-            document.getElementById('answer-input').disabled = true;
-            document.getElementById('check-btn').disabled = true;
-            document.getElementById('next-btn').classList.remove('hidden');
-            document.getElementById('next-btn').focus();
-        }
-
-        function nextQuestion() {
-            currentIndex++;
-            if (currentIndex >= shuffled.length) {
-                showEndScreen();
-            } else {
-                showQuestion();
-            }
-        }
-
-        function showEndScreen() {
-            document.getElementById('game-screen').style.display = 'none';
-            const end = document.getElementById('end-screen');
-            end.style.display = 'block';
-            document.getElementById('final-score').textContent = score + ' / ' + shuffled.length;
-
-            let msg = '';
-            const pct = score / shuffled.length;
-            if (pct === 1) msg = 'Perfekcyjnie! Jesteś mistrzem polskich słówek!';
-            else if (pct >= 0.8) msg = 'Świetny wynik! Tak trzymaj!';
-            else if (pct >= 0.5) msg = 'Dobra robota! Ćwicz dalej!';
-            else msg = 'Nie poddawaj się! Spróbuj jeszcze raz!';
-            document.getElementById('end-message').textContent = msg;
-        }
-
-        function restartGame() {
-            currentIndex = 0;
-            score = 0;
-            document.getElementById('score').textContent = '0';
-            shuffled = shuffle(QUESTIONS);
-            document.getElementById('question-total').textContent = shuffled.length;
-            document.getElementById('end-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = '';
-            showQuestion();
-        }
-
-        function insertChar(ch) {
-            const input = document.getElementById('answer-input');
-            if (input.disabled) return;
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
-            const val = input.value;
-            input.value = val.substring(0, start) + ch + val.substring(end);
-            input.selectionStart = input.selectionEnd = start + 1;
-            input.focus();
-        }
-
-        // Enter = sprawdź lub następne
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                if (answered && currentIndex < shuffled.length - 1) {
-                    nextQuestion();
-                } else if (answered && currentIndex >= shuffled.length - 1) {
-                    showEndScreen();
-                } else {
-                    checkAnswer();
-                }
-            }
-        });
-
-        // Start
-        restartGame();
-    </script>
+// start
+restartGame();
+</script>
 </body>
 </html>
