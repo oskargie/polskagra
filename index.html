@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polskie Słówka - Gra Edukacyjna</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,286 +21,238 @@
             background: white;
             border-radius: 24px;
             padding: 36px;
-            max-width: 720px;
+            max-width: 740px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
         }
 
-        h1 {
-            font-size: 2em;
-            color: #4a3f8a;
-            margin-bottom: 6px;
+        h1 { font-size: 2em; color: #4a3f8a; margin-bottom: 6px; }
+        .subtitle { color: #888; font-size: 1em; margin-bottom: 20px; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ═══════ SETUP ═══════ */
+        .setup-title { font-size: 1.4em; color: #4a3f8a; margin-bottom: 18px; }
+
+        .player-count-btns {
+            display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;
+        }
+        .player-count-btns button {
+            font-size: 1.15em; padding: 10px 28px;
+            border: 3px solid #d4ccf7; border-radius: 12px;
+            background: #f8f6ff; color: #4a3f8a; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .player-count-btns button.selected {
+            background: #764ba2; color: white; border-color: #764ba2;
         }
 
-        .subtitle {
-            color: #888;
-            font-size: 1em;
-            margin-bottom: 20px;
+        .player-inputs { max-width: 400px; margin: 0 auto 24px; }
+        .player-input-row {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+        }
+        .player-dot {
+            width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+        }
+        .player-input-row input {
+            flex: 1; font-size: 1.1em; padding: 10px 14px;
+            border: 2px solid #d4ccf7; border-radius: 10px; outline: none;
+        }
+        .player-input-row input:focus { border-color: #764ba2; }
+
+        .start-btn {
+            font-size: 1.3em; padding: 14px 48px;
+            background: #764ba2; color: white; border: none;
+            border-radius: 14px; cursor: pointer; transition: background 0.2s;
+        }
+        .start-btn:hover { background: #5a3880; }
+
+        /* ═══════ HANDOFF ═══════ */
+        .handoff-card {
+            padding: 40px 20px;
+        }
+        .handoff-name {
+            font-size: 2.4em; font-weight: bold; margin-bottom: 8px;
+        }
+        .handoff-sub {
+            font-size: 1.2em; color: #666; margin-bottom: 32px;
+        }
+        .ready-btn {
+            font-size: 1.3em; padding: 16px 48px;
+            background: #764ba2; color: white; border: none;
+            border-radius: 14px; cursor: pointer; transition: background 0.2s;
+        }
+        .ready-btn:hover { background: #5a3880; }
+
+        /* ═══════ GAME ═══════ */
+        .player-banner {
+            display: inline-block;
+            padding: 6px 20px; border-radius: 20px;
+            color: white; font-weight: bold; font-size: 1.1em;
+            margin-bottom: 14px;
         }
 
-        /* ── pasek stanu ── */
         .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
         }
-
         .status-pill {
-            background: #f0f0f0;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 1em;
-            color: #555;
-            white-space: nowrap;
+            background: #f0f0f0; padding: 8px 16px; border-radius: 12px;
+            font-size: 1em; color: #555; white-space: nowrap;
         }
 
-        /* ── licznik czasu ── */
+        /* timer */
         .timer-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            flex: 1;
-            min-width: 120px;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; flex: 1; min-width: 120px;
         }
-
         .timer-display {
-            font-size: 2em;
-            font-weight: bold;
-            color: #4a3f8a;
-            line-height: 1;
+            font-size: 2em; font-weight: bold; color: #4a3f8a; line-height: 1;
             transition: color 0.4s;
         }
-
         .timer-display.warn   { color: #e67e22; }
         .timer-display.danger { color: #e74c3c; }
-
         .timer-bar-track {
-            width: 100%;
-            max-width: 160px;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
+            width: 100%; max-width: 160px; height: 8px;
+            background: #e0e0e0; border-radius: 4px; overflow: hidden;
         }
-
         .timer-bar-fill {
-            height: 100%;
-            background: #4a3f8a;
-            border-radius: 4px;
+            height: 100%; background: #4a3f8a; border-radius: 4px;
             transition: width 1s linear, background 0.4s;
         }
-
         .timer-bar-fill.warn   { background: #e67e22; }
         .timer-bar-fill.danger { background: #e74c3c; }
 
-        /* ── zdanie ── */
+        /* zdanie */
         .sentence-box {
-            background: #f8f6ff;
-            border: 3px solid #d4ccf7;
-            border-radius: 16px;
-            padding: 28px 24px 20px;
-            margin-bottom: 18px;
-            font-size: 1.45em;
-            line-height: 1.7;
-            color: #333;
+            background: #f8f6ff; border: 3px solid #d4ccf7; border-radius: 16px;
+            padding: 28px 24px 20px; margin-bottom: 18px;
+            font-size: 1.45em; line-height: 1.7; color: #333;
         }
-
         .blank {
-            display: inline-block;
-            min-width: 110px;
-            border-bottom: 3px dashed #764ba2;
-            color: #764ba2;
-            font-weight: bold;
-            padding: 0 4px;
+            display: inline-block; min-width: 110px;
+            border-bottom: 3px dashed #764ba2; color: #764ba2;
+            font-weight: bold; padding: 0 4px;
         }
+        .hint { color: #999; font-size: 0.78em; margin-top: 10px; font-style: italic; }
 
-        .hint {
-            color: #999;
-            font-size: 0.78em;
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        /* ── sugestie ── */
+        /* sugestie */
         .suggestions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 18px;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin-bottom: 18px;
         }
-
         .suggestion {
-            background: #f0eeff;
-            border: 2px solid #c9bef5;
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 1.1em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            background: #f0eeff; border: 2px solid #c9bef5; border-radius: 12px;
+            padding: 10px 14px; font-size: 1.1em;
+            display: flex; align-items: center; gap: 10px;
             transition: background 0.2s, border-color 0.2s;
         }
-
-        .suggestion.reveal-correct {
-            background: #d4edda;
-            border-color: #28a745;
-        }
-
-        .suggestion.reveal-wrong {
-            background: #f0f0f0;
-            border-color: #ccc;
-            color: #aaa;
-        }
-
+        .suggestion.reveal-correct { background: #d4edda; border-color: #28a745; }
+        .suggestion.reveal-wrong   { background: #f0f0f0; border-color: #ccc; color: #aaa; }
         .suggestion-letter {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #764ba2;
-            min-width: 22px;
+            font-weight: bold; font-size: 1.1em; color: #764ba2; min-width: 22px;
         }
-
         .suggestion.reveal-correct .suggestion-letter { color: #155724; }
         .suggestion.reveal-wrong   .suggestion-letter { color: #aaa; }
 
-        /* ── pole wpisywania ── */
+        /* pole wpisywania */
         .input-area {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
+            display: flex; gap: 12px; justify-content: center;
+            align-items: center; flex-wrap: wrap; margin-bottom: 12px;
         }
-
         .input-area input {
-            font-size: 1.25em;
-            padding: 12px 18px;
-            border: 3px solid #d4ccf7;
-            border-radius: 12px;
-            outline: none;
-            width: 240px;
-            text-align: center;
+            font-size: 1.25em; padding: 12px 18px; border: 3px solid #d4ccf7;
+            border-radius: 12px; outline: none; width: 240px; text-align: center;
             transition: border-color 0.2s;
         }
-
         .input-area input:focus { border-color: #764ba2; }
         .input-area input.correct { border-color: #28a745; background: #f0fff4; }
         .input-area input.wrong   { border-color: #e74c3c; background: #fff5f5; }
 
         .input-area button {
-            font-size: 1.15em;
-            padding: 12px 26px;
-            background: #764ba2;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
+            font-size: 1.15em; padding: 12px 26px; background: #764ba2;
+            color: white; border: none; border-radius: 12px; cursor: pointer;
             transition: background 0.2s;
         }
-
         .input-area button:hover:not(:disabled) { background: #5a3880; }
         .input-area button:disabled { background: #bbb; cursor: default; }
 
-        /* ── klawiatura polska ── */
+        /* klawiatura polska */
         .polish-keys {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
+            display: flex; justify-content: center; gap: 5px;
+            flex-wrap: wrap; margin-bottom: 16px;
         }
-
         .polish-keys button {
-            font-size: 1.05em;
-            padding: 7px 12px;
-            background: #eee;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            cursor: pointer;
+            font-size: 1.05em; padding: 7px 12px; background: #eee;
+            border: 2px solid #ccc; border-radius: 8px; cursor: pointer;
             transition: background 0.15s;
         }
-
         .polish-keys button:hover { background: #d4ccf7; }
 
-        /* ── feedback ── */
+        /* feedback */
         .feedback {
-            font-size: 1.2em;
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-height: 52px;
+            font-size: 1.2em; padding: 14px; border-radius: 12px;
+            margin-bottom: 16px; display: flex; align-items: center;
+            justify-content: center; gap: 10px; min-height: 52px;
             visibility: hidden;
         }
-
         .feedback.correct { background: #d4edda; color: #155724; visibility: visible; }
         .feedback.wrong   { background: #f8d7da; color: #721c24; visibility: visible; }
         .feedback.timeout { background: #fff3cd; color: #856404; visibility: visible; }
 
-        /* ── przycisk dalej ── */
         .next-btn {
-            font-size: 1.1em;
-            padding: 12px 32px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
+            font-size: 1.1em; padding: 12px 32px; background: #667eea;
+            color: white; border: none; border-radius: 12px; cursor: pointer;
             transition: background 0.2s;
         }
-
         .next-btn:hover { background: #5568d3; }
         .next-btn.hidden { display: none; }
 
-        /* ── ekran końcowy ── */
-        .end-screen { display: none; }
-
-        .end-screen h2 {
-            font-size: 1.8em;
-            color: #4a3f8a;
-            margin-bottom: 12px;
+        /* ═══ tablica wyników w grze ═══ */
+        .scoreboard {
+            display: flex; justify-content: center; gap: 10px;
+            flex-wrap: wrap; margin-top: 18px; padding-top: 14px;
+            border-top: 2px solid #eee;
+        }
+        .sb-player {
+            display: flex; align-items: center; gap: 6px;
+            background: #f8f6ff; padding: 6px 14px; border-radius: 10px;
+            font-size: 0.95em; transition: transform 0.2s;
+        }
+        .sb-player.current { transform: scale(1.08); font-weight: bold; }
+        .sb-dot {
+            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
         }
 
-        .final-score {
-            font-size: 3.5em;
-            color: #764ba2;
-            font-weight: bold;
-            margin: 16px 0 8px;
-        }
+        /* ═══════ END SCREEN ═══════ */
+        .end-screen h2 { font-size: 1.8em; color: #4a3f8a; margin-bottom: 16px; }
 
-        .final-max {
-            color: #aaa;
-            font-size: 1em;
-            margin-bottom: 16px;
+        .leaderboard {
+            max-width: 400px; margin: 0 auto 20px; text-align: left;
         }
-
-        .end-screen p#end-message {
-            font-size: 1.2em;
-            color: #555;
+        .lb-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: 12px; margin-bottom: 8px;
+            font-size: 1.15em;
         }
+        .lb-row.first { background: #fff8e1; border: 2px solid #ffd54f; }
+        .lb-row:not(.first) { background: #f5f5f5; }
+        .lb-rank {
+            font-weight: bold; font-size: 1.3em; min-width: 32px; text-align: center;
+        }
+        .lb-name { flex: 1; }
+        .lb-score { font-weight: bold; color: #764ba2; }
 
         .end-screen button {
-            font-size: 1.2em;
-            padding: 14px 36px;
-            background: #764ba2;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            margin-top: 24px;
+            font-size: 1.2em; padding: 14px 36px; background: #764ba2;
+            color: white; border: none; border-radius: 12px; cursor: pointer;
+            margin-top: 16px;
         }
-
         .end-screen button:hover { background: #5a3880; }
 
-        /* punkty animowane */
+        /* animacja */
         @keyframes pop {
             0%   { transform: scale(1); }
             50%  { transform: scale(1.4); }
@@ -316,21 +264,46 @@
 <body>
 <div class="game-container">
 
-    <!-- ═══ EKRAN GRY ═══ -->
-    <div id="game-screen">
+    <!-- ═══ EKRAN USTAWIEŃ ═══ -->
+    <div id="setup-screen" class="screen active">
         <h1>Polskie Słówka</h1>
-        <p class="subtitle">Wpisz brakujące słowo w zdaniu</p>
+        <p class="subtitle">Gra edukacyjna dla dzieci</p>
+
+        <p class="setup-title">Ilu graczy?</p>
+        <div class="player-count-btns" id="count-btns">
+            <button onclick="setPlayerCount(1)" id="cnt-1">1</button>
+            <button onclick="setPlayerCount(2)" id="cnt-2" class="selected">2</button>
+            <button onclick="setPlayerCount(3)" id="cnt-3">3</button>
+            <button onclick="setPlayerCount(4)" id="cnt-4">4</button>
+        </div>
+
+        <div class="player-inputs" id="player-inputs"></div>
+
+        <button class="start-btn" onclick="startGame()">Rozpocznij grę</button>
+    </div>
+
+    <!-- ═══ EKRAN PRZEKAZANIA ═══ -->
+    <div id="handoff-screen" class="screen">
+        <h1>Polskie Słówka</h1>
+        <div class="handoff-card">
+            <div class="handoff-name" id="handoff-name"></div>
+            <div class="handoff-sub">Twoja kolej! Przygotuj się.</div>
+            <button class="ready-btn" onclick="showGameScreen()">Gotowy!</button>
+        </div>
+    </div>
+
+    <!-- ═══ EKRAN GRY ═══ -->
+    <div id="game-screen" class="screen">
+        <div class="player-banner" id="player-banner"></div>
 
         <div class="status-bar">
             <div class="status-pill">Pytanie: <strong id="question-num">1</strong>&nbsp;/&nbsp;<strong id="question-total">20</strong></div>
-
             <div class="timer-wrap">
                 <div class="timer-display" id="timer-display">60</div>
                 <div class="timer-bar-track">
                     <div class="timer-bar-fill" id="timer-bar"></div>
                 </div>
             </div>
-
             <div class="status-pill">Wynik: <strong id="score">0</strong> pkt</div>
         </div>
 
@@ -339,9 +312,7 @@
             <p class="hint" id="hint"></p>
         </div>
 
-        <!-- sugestie (tylko do wglądu) -->
         <div class="suggestions" id="suggestions"></div>
-
         <div class="feedback" id="feedback"></div>
 
         <div id="input-section">
@@ -349,7 +320,6 @@
                 <input type="text" id="answer-input" placeholder="Wpisz słowo…" autocomplete="off">
                 <button id="check-btn" onclick="checkAnswer()">Sprawdź</button>
             </div>
-
             <div class="polish-keys">
                 <button onclick="insertChar('ą')">ą</button>
                 <button onclick="insertChar('ć')">ć</button>
@@ -363,57 +333,146 @@
             </div>
         </div>
 
-        <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Następne pytanie ▶</button>
+        <button class="next-btn hidden" id="next-btn" onclick="nextTurn()">Dalej ▶</button>
+
+        <div class="scoreboard" id="scoreboard"></div>
     </div>
 
     <!-- ═══ EKRAN KOŃCOWY ═══ -->
-    <div id="end-screen" class="end-screen">
+    <div id="end-screen" class="screen end-screen">
         <h2>Koniec gry!</h2>
-        <p>Twój wynik:</p>
-        <div class="final-score" id="final-score"></div>
-        <div class="final-max" id="final-max"></div>
-        <p id="end-message"></p>
-        <button onclick="restartGame()">Zagraj ponownie</button>
+        <div class="leaderboard" id="leaderboard"></div>
+        <button onclick="backToSetup()">Zagraj ponownie</button>
     </div>
-
 </div>
 
 <script>
 const QUESTIONS = [
     { sentence: "Mama piecze ___ na urodziny.",               answer: "tort",       hint: "Coś słodkiego ze świeczkami" },
-    { sentence: "W nocy na niebie świeci ___.",                answer: "księżyc",   hint: "Jest okrągły i jasny" },
-    { sentence: "Pies macha ___ na powitanie.",               answer: "ogonem",    hint: "Pies ma to z tyłu" },
-    { sentence: "Rano jem ___ na śniadanie.",                 answer: "kanapkę",   hint: "Coś z chlebem" },
-    { sentence: "___ mieszka w lesie i zbiera orzechy.",      answer: "wiewiórka", hint: "Małe rude zwierzątko z puszystym ogonem" },
-    { sentence: "Dzieci bawią się na ___.",                   answer: "podwórku",  hint: "Miejsce przed domem do zabawy" },
-    { sentence: "Zimą pada biały ___.",                       answer: "śnieg",     hint: "Można z niego lepić bałwana" },
-    { sentence: "Kot pije ___ z miski.",                      answer: "mleko",     hint: "Biały napój" },
-    { sentence: "Tata czyta ___ przed snem.",                 answer: "bajkę",     hint: "Historia z książki" },
-    { sentence: "___ pływa w stawie.",                        answer: "żaba",      hint: "Zielona i kumka" },
-    { sentence: "W szkole piszemy w ___.",                    answer: "zeszycie",  hint: "Ma kartki w linie lub kratkę" },
-    { sentence: "Ptaki budują ___ na drzewie.",               answer: "gniazdo",   hint: "Dom dla ptaków" },
-    { sentence: "Samochód jedzie po ___.",                    answer: "drodze",    hint: "Asfaltowa nawierzchnia" },
-    { sentence: "Ryby pływają w ___.",                        answer: "morzu",     hint: "Duży zbiornik słonej wody" },
-    { sentence: "Słońce wschodzi ___.",                       answer: "rano",      hint: "Pora dnia, kiedy się budzimy" },
-    { sentence: "___ daje nam miód.",                         answer: "pszczoła",  hint: "Latający owad w żółto-czarne paski" },
-    { sentence: "Na obiad jemy ___ z klopsikami.",            answer: "makaron",   hint: "Długie lub krótkie, gotowane w wodzie" },
-    { sentence: "W zimie nosimy czapkę i ___.",               answer: "szalik",    hint: "Owijamy nim szyję" },
-    { sentence: "Babcia robi na drutach ___.",                answer: "sweter",    hint: "Ciepłe ubranie wkładane przez głowę" },
-    { sentence: "Listonosz przynosi ___.",                    answer: "listy",     hint: "Wkłada je do skrzynki pocztowej" },
+    { sentence: "W nocy na niebie świeci ___.",                answer: "księżyc",    hint: "Jest okrągły i jasny" },
+    { sentence: "Pies macha ___ na powitanie.",                answer: "ogonem",     hint: "Pies ma to z tyłu" },
+    { sentence: "Rano jem ___ na śniadanie.",                  answer: "kanapkę",    hint: "Coś z chlebem" },
+    { sentence: "___ mieszka w lesie i zbiera orzechy.",       answer: "wiewiórka",  hint: "Małe rude zwierzątko z puszystym ogonem" },
+    { sentence: "Dzieci bawią się na ___.",                    answer: "podwórku",   hint: "Miejsce przed domem do zabawy" },
+    { sentence: "Zimą pada biały ___.",                        answer: "śnieg",      hint: "Można z niego lepić bałwana" },
+    { sentence: "Kot pije ___ z miski.",                       answer: "mleko",      hint: "Biały napój" },
+    { sentence: "Tata czyta ___ przed snem.",                  answer: "bajkę",      hint: "Historia z książki" },
+    { sentence: "___ pływa w stawie.",                         answer: "żaba",       hint: "Zielona i kumka" },
+    { sentence: "W szkole piszemy w ___.",                     answer: "zeszycie",   hint: "Ma kartki w linie lub kratkę" },
+    { sentence: "Ptaki budują ___ na drzewie.",                answer: "gniazdo",    hint: "Dom dla ptaków" },
+    { sentence: "Samochód jedzie po ___.",                     answer: "drodze",     hint: "Asfaltowa nawierzchnia" },
+    { sentence: "Ryby pływają w ___.",                         answer: "morzu",      hint: "Duży zbiornik słonej wody" },
+    { sentence: "Słońce wschodzi ___.",                        answer: "rano",       hint: "Pora dnia, kiedy się budzimy" },
+    { sentence: "___ daje nam miód.",                          answer: "pszczoła",   hint: "Latający owad w żółto-czarne paski" },
+    { sentence: "Na obiad jemy ___ z klopsikami.",             answer: "makaron",    hint: "Długie lub krótkie, gotowane w wodzie" },
+    { sentence: "W zimie nosimy czapkę i ___.",                answer: "szalik",     hint: "Owijamy nim szyję" },
+    { sentence: "Babcia robi na drutach ___.",                 answer: "sweter",     hint: "Ciepłe ubranie wkładane przez głowę" },
+    { sentence: "Listonosz przynosi ___.",                     answer: "listy",      hint: "Wkłada je do skrzynki pocztowej" },
 ];
 
+const PLAYER_COLORS = ['#e74c3c', '#3498db', '#27ae60', '#f39c12'];
+const PLAYER_NAMES_DEFAULT = ['Gracz 1', 'Gracz 2', 'Gracz 3', 'Gracz 4'];
 const LETTERS = ['A', 'B', 'C', 'D'];
 const MAX_TIME = 60;
 
-let currentIndex = 0;
-let score = 0;
-let totalMax = 0;
+let playerCount = 2;
+let players = [];       // { name, color, score }
+let currentPlayerIdx = 0;
+let currentQuestionIdx = 0;
 let shuffled = [];
 let answered = false;
 let timeLeft = MAX_TIME;
 let timerInterval = null;
 
-/* ── narzędzia ── */
+/* ═══════ EKRANY ═══════ */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+/* ═══════ SETUP ═══════ */
+function setPlayerCount(n) {
+    playerCount = n;
+    document.querySelectorAll('#count-btns button').forEach(b => b.classList.remove('selected'));
+    document.getElementById('cnt-' + n).classList.add('selected');
+    renderPlayerInputs();
+}
+
+function renderPlayerInputs() {
+    const c = document.getElementById('player-inputs');
+    c.innerHTML = '';
+    for (let i = 0; i < playerCount; i++) {
+        const row = document.createElement('div');
+        row.className = 'player-input-row';
+        row.innerHTML =
+            `<div class="player-dot" style="background:${PLAYER_COLORS[i]}"></div>` +
+            `<input type="text" id="pname-${i}" placeholder="${PLAYER_NAMES_DEFAULT[i]}" maxlength="16">`;
+        c.appendChild(row);
+    }
+}
+
+function startGame() {
+    players = [];
+    for (let i = 0; i < playerCount; i++) {
+        const inp = document.getElementById('pname-' + i);
+        const name = (inp && inp.value.trim()) || PLAYER_NAMES_DEFAULT[i];
+        players.push({ name, color: PLAYER_COLORS[i], score: 0 });
+    }
+    currentPlayerIdx = 0;
+    currentQuestionIdx = 0;
+    shuffled = shuffle(QUESTIONS);
+    document.getElementById('question-total').textContent = shuffled.length;
+
+    if (playerCount === 1) {
+        // tryb jednoosobowy — od razu do gry
+        showScreen('game-screen');
+        updatePlayerBanner();
+        renderScoreboard();
+        showQuestion();
+    } else {
+        showHandoff();
+    }
+}
+
+/* ═══════ HANDOFF ═══════ */
+function showHandoff() {
+    const p = players[currentPlayerIdx];
+    const el = document.getElementById('handoff-name');
+    el.textContent = p.name;
+    el.style.color = p.color;
+    showScreen('handoff-screen');
+}
+
+function showGameScreen() {
+    showScreen('game-screen');
+    updatePlayerBanner();
+    renderScoreboard();
+    showQuestion();
+}
+
+/* ═══════ UI GRACZY ═══════ */
+function updatePlayerBanner() {
+    const p = players[currentPlayerIdx];
+    const banner = document.getElementById('player-banner');
+    banner.textContent = p.name;
+    banner.style.background = p.color;
+    document.getElementById('score').textContent = p.score;
+}
+
+function renderScoreboard() {
+    const sb = document.getElementById('scoreboard');
+    sb.innerHTML = '';
+    players.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'sb-player' + (i === currentPlayerIdx ? ' current' : '');
+        div.innerHTML =
+            `<span class="sb-dot" style="background:${p.color}"></span>` +
+            `<span>${p.name}: <strong>${p.score}</strong> pkt</span>`;
+        sb.appendChild(div);
+    });
+}
+
+/* ═══════ NARZĘDZIA ═══════ */
 function shuffle(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -431,11 +490,10 @@ function normalize(str) {
 }
 
 function calcPoints(secondsLeft) {
-    // 10 pkt za błyskawiczną odpowiedź, proporcjonalnie mniej — minimum 1
     return Math.max(1, Math.round(10 * secondsLeft / MAX_TIME));
 }
 
-/* ── timer ── */
+/* ═══════ TIMER ═══════ */
 function startTimer() {
     clearInterval(timerInterval);
     timeLeft = MAX_TIME;
@@ -443,23 +501,17 @@ function startTimer() {
     timerInterval = setInterval(() => {
         timeLeft--;
         updateTimerUI();
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            onTimeout();
-        }
+        if (timeLeft <= 0) { clearInterval(timerInterval); onTimeout(); }
     }, 1000);
 }
 
-function stopTimer() {
-    clearInterval(timerInterval);
-}
+function stopTimer() { clearInterval(timerInterval); }
 
 function updateTimerUI() {
     const pct = timeLeft / MAX_TIME;
     const display = document.getElementById('timer-display');
-    const bar = document.getElementById('timer-bar');
+    const bar     = document.getElementById('timer-bar');
     const cls = pct > 0.4 ? '' : pct > 0.2 ? 'warn' : 'danger';
-
     display.textContent = timeLeft;
     display.className = 'timer-display ' + cls;
     bar.style.width = (pct * 100) + '%';
@@ -469,29 +521,24 @@ function updateTimerUI() {
 function onTimeout() {
     if (answered) return;
     answered = true;
-    const q = shuffled[currentIndex];
-
+    const q = shuffled[currentQuestionIdx];
     document.getElementById('answer-input').disabled = true;
     document.getElementById('check-btn').disabled = true;
-
     const fb = document.getElementById('feedback');
     fb.textContent = '⏰ Czas minął! Poprawna odpowiedź: ' + q.answer;
     fb.className = 'feedback timeout';
-
     revealSuggestions(null);
     document.getElementById('next-btn').classList.remove('hidden');
     document.getElementById('next-btn').focus();
 }
 
-/* ── sugestie ── */
+/* ═══════ SUGESTIE ═══════ */
 function buildSuggestions(correctAnswer) {
-    // zbierz 3 losowe błędne odpowiedzi z puli
     const pool = shuffled
         .map(q => q.answer)
         .filter(a => normalize(a) !== normalize(correctAnswer));
     const distractors = shuffle(pool).slice(0, 3);
-    const options = shuffle([correctAnswer, ...distractors]);
-    return options;
+    return shuffle([correctAnswer, ...distractors]);
 }
 
 function renderSuggestions(options) {
@@ -504,31 +551,29 @@ function renderSuggestions(options) {
         div.innerHTML = `<span class="suggestion-letter">${LETTERS[i]}</span>${opt}`;
         container.appendChild(div);
     });
-    // zachowaj listę opcji w danych
     container.dataset.options = JSON.stringify(options);
 }
 
 function revealSuggestions(correctAnswer) {
     const container = document.getElementById('suggestions');
     const options = JSON.parse(container.dataset.options || '[]');
+    const correct = correctAnswer || shuffled[currentQuestionIdx].answer;
     options.forEach((opt, i) => {
         const div = document.getElementById('sug-' + i);
         if (!div) return;
-        const isCorrect = correctAnswer
-            ? normalize(opt) === normalize(correctAnswer)
-            : normalize(opt) === normalize(shuffled[currentIndex].answer);
-        div.className = 'suggestion ' + (isCorrect ? 'reveal-correct' : 'reveal-wrong');
+        div.className = 'suggestion ' +
+            (normalize(opt) === normalize(correct) ? 'reveal-correct' : 'reveal-wrong');
     });
 }
 
-/* ── pytanie ── */
+/* ═══════ PYTANIE ═══════ */
 function showQuestion() {
-    const q = shuffled[currentIndex];
+    const q = shuffled[currentQuestionIdx];
     const parts = q.sentence.split('___');
     document.getElementById('sentence').innerHTML =
         parts[0] + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + parts[1];
     document.getElementById('hint').textContent = 'Podpowiedź: ' + q.hint;
-    document.getElementById('question-num').textContent = currentIndex + 1;
+    document.getElementById('question-num').textContent = currentQuestionIdx + 1;
 
     const input = document.getElementById('answer-input');
     input.value = '';
@@ -538,15 +583,13 @@ function showQuestion() {
     document.getElementById('feedback').className = 'feedback';
     document.getElementById('next-btn').classList.add('hidden');
 
-    const options = buildSuggestions(q.answer);
-    renderSuggestions(options);
-
+    renderSuggestions(buildSuggestions(q.answer));
     answered = false;
     startTimer();
     input.focus();
 }
 
-/* ── sprawdzanie ── */
+/* ═══════ SPRAWDZANIE ═══════ */
 function checkAnswer() {
     if (answered) return;
     const input = document.getElementById('answer-input');
@@ -556,27 +599,25 @@ function checkAnswer() {
     stopTimer();
     answered = true;
 
-    const q = shuffled[currentIndex];
+    const q = shuffled[currentQuestionIdx];
     const isCorrect = normalize(val) === normalize(q.answer);
     const fb = document.getElementById('feedback');
+    const p = players[currentPlayerIdx];
 
     if (isCorrect) {
         const pts = calcPoints(timeLeft);
-        score += pts;
-        totalMax += 10;
-        document.getElementById('score').textContent = score;
+        p.score += pts;
+        document.getElementById('score').textContent = p.score;
 
-        // animacja wyniku
         const scoreEl = document.getElementById('score');
         scoreEl.classList.remove('pop');
         void scoreEl.offsetWidth;
         scoreEl.classList.add('pop');
 
         input.className = 'correct';
-        fb.innerHTML = `✅ Brawo! +${pts} pkt${pts === 10 ? ' 🎉' : ''}`;
+        fb.innerHTML = `✅ Brawo! +${pts} pkt` + (pts === 10 ? ' 🎉' : '');
         fb.className = 'feedback correct';
     } else {
-        totalMax += 10;
         input.className = 'wrong';
         fb.textContent = '❌ Niestety! Poprawna odpowiedź: ' + q.answer;
         fb.className = 'feedback wrong';
@@ -585,52 +626,57 @@ function checkAnswer() {
     input.disabled = true;
     document.getElementById('check-btn').disabled = true;
     revealSuggestions(q.answer);
+    renderScoreboard();
     document.getElementById('next-btn').classList.remove('hidden');
     document.getElementById('next-btn').focus();
 }
 
-/* ── następne / koniec ── */
-function nextQuestion() {
-    currentIndex++;
-    if (currentIndex >= shuffled.length) {
+/* ═══════ NASTĘPNA TURA ═══════ */
+function nextTurn() {
+    currentQuestionIdx++;
+    if (currentQuestionIdx >= shuffled.length) {
         showEndScreen();
+        return;
+    }
+    // następny gracz
+    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+
+    if (players.length > 1) {
+        showHandoff();
     } else {
+        updatePlayerBanner();
+        renderScoreboard();
         showQuestion();
     }
 }
 
+/* ═══════ KONIEC ═══════ */
 function showEndScreen() {
     stopTimer();
-    document.getElementById('game-screen').style.display = 'none';
-    const end = document.getElementById('end-screen');
-    end.style.display = 'block';
+    showScreen('end-screen');
 
-    document.getElementById('final-score').textContent = score + ' pkt';
-    document.getElementById('final-max').textContent = 'maks. możliwe: ' + shuffled.length * 10 + ' pkt';
+    const sorted = [...players].sort((a, b) => b.score - a.score);
+    const ranks = ['🥇', '🥈', '🥉', '4.'];
+    const lb = document.getElementById('leaderboard');
+    lb.innerHTML = '';
 
-    const pct = score / (shuffled.length * 10);
-    let msg;
-    if (pct >= 0.95) msg = 'Perfekcyjnie! Jesteś mistrzem polskich słówek! 🏆';
-    else if (pct >= 0.75) msg = 'Świetny wynik! Tak trzymaj! 🌟';
-    else if (pct >= 0.5)  msg = 'Dobra robota! Ćwicz dalej! 💪';
-    else                  msg = 'Nie poddawaj się! Spróbuj jeszcze raz! 😊';
-    document.getElementById('end-message').textContent = msg;
+    sorted.forEach((p, i) => {
+        const row = document.createElement('div');
+        row.className = 'lb-row' + (i === 0 ? ' first' : '');
+        row.innerHTML =
+            `<span class="lb-rank">${ranks[i] || (i+1)+'.'}</span>` +
+            `<span class="sb-dot" style="background:${p.color}"></span>` +
+            `<span class="lb-name">${p.name}</span>` +
+            `<span class="lb-score">${p.score} pkt</span>`;
+        lb.appendChild(row);
+    });
 }
 
-/* ── restart ── */
-function restartGame() {
-    currentIndex = 0;
-    score = 0;
-    totalMax = 0;
-    document.getElementById('score').textContent = '0';
-    shuffled = shuffle(QUESTIONS);
-    document.getElementById('question-total').textContent = shuffled.length;
-    document.getElementById('end-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = '';
-    showQuestion();
+function backToSetup() {
+    showScreen('setup-screen');
 }
 
-/* ── polskie znaki ── */
+/* ═══════ POLSKIE ZNAKI ═══════ */
 function insertChar(ch) {
     const input = document.getElementById('answer-input');
     if (input.disabled) return;
@@ -640,19 +686,22 @@ function insertChar(ch) {
     input.focus();
 }
 
-/* ── klawiatura ── */
+/* ═══════ KLAWIATURA ═══════ */
 document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        if (!answered) {
-            checkAnswer();
-        } else {
-            nextQuestion();
-        }
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+
+    if (active.id === 'handoff-screen') {
+        showGameScreen();
+    } else if (active.id === 'game-screen') {
+        if (!answered) checkAnswer();
+        else nextTurn();
     }
 });
 
-// start
-restartGame();
+// inicjalizacja ekranu ustawień
+renderPlayerInputs();
 </script>
 </body>
 </html>
