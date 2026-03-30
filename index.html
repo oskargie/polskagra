@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polskie Słówka - Gra Edukacyjna</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #4a3f8a;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .score-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        .score-bar span {
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 12px;
+        }
+
+        .sentence-box {
+            background: #f8f6ff;
+            border: 3px solid #d4ccf7;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            font-size: 1.5em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .blank {
+            display: inline-block;
+            min-width: 120px;
+            border-bottom: 3px dashed #764ba2;
+            color: #764ba2;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        .hint {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .input-area input {
+            font-size: 1.3em;
+            padding: 12px 20px;
+            border: 3px solid #d4ccf7;
+            border-radius: 12px;
+            outline: none;
+            width: 260px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .input-area input:focus {
+            border-color: #764ba2;
+        }
+
+        .input-area button {
+            font-size: 1.2em;
+            padding: 12px 28px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .input-area button:hover {
+            background: #5a3880;
+        }
+
+        .polish-keys {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .polish-keys button {
+            font-size: 1.1em;
+            padding: 8px 14px;
+            background: #eee;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .polish-keys button:hover {
+            background: #d4ccf7;
+        }
+
+        .feedback {
+            font-size: 1.3em;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .feedback.wrong {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .feedback.hidden {
+            visibility: hidden;
+        }
+
+        .next-btn {
+            font-size: 1.1em;
+            padding: 12px 32px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .next-btn:hover {
+            background: #5568d3;
+        }
+
+        .next-btn.hidden {
+            display: none;
+        }
+
+        /* Ekran końcowy */
+        .end-screen {
+            display: none;
+        }
+
+        .end-screen h2 {
+            font-size: 1.8em;
+            color: #4a3f8a;
+            margin-bottom: 16px;
+        }
+
+        .end-screen .final-score {
+            font-size: 3em;
+            color: #764ba2;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .end-screen button {
+            font-size: 1.2em;
+            padding: 14px 36px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .end-screen button:hover {
+            background: #5a3880;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Ekran gry -->
+        <div id="game-screen">
+            <h1>Polskie Słówka</h1>
+            <p class="subtitle">Wpisz brakujące słowo w zdaniu</p>
+
+            <div class="score-bar">
+                <span>Pytanie: <strong id="question-num">1</strong> / <strong id="question-total">10</strong></span>
+                <span>Wynik: <strong id="score">0</strong></span>
+            </div>
+
+            <div class="sentence-box">
+                <p id="sentence"></p>
+                <p class="hint" id="hint"></p>
+            </div>
+
+            <div class="feedback hidden" id="feedback"></div>
+
+            <div id="input-section">
+                <div class="input-area">
+                    <input type="text" id="answer-input" placeholder="Wpisz słowo..." autocomplete="off">
+                    <button id="check-btn" onclick="checkAnswer()">Sprawdź</button>
+                </div>
+
+                <div class="polish-keys">
+                    <button onclick="insertChar('ą')">ą</button>
+                    <button onclick="insertChar('ć')">ć</button>
+                    <button onclick="insertChar('ę')">ę</button>
+                    <button onclick="insertChar('ł')">ł</button>
+                    <button onclick="insertChar('ń')">ń</button>
+                    <button onclick="insertChar('ó')">ó</button>
+                    <button onclick="insertChar('ś')">ś</button>
+                    <button onclick="insertChar('ź')">ź</button>
+                    <button onclick="insertChar('ż')">ż</button>
+                </div>
+            </div>
+
+            <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">Następne pytanie</button>
+        </div>
+
+        <!-- Ekran końcowy -->
+        <div id="end-screen" class="end-screen">
+            <h2>Koniec gry!</h2>
+            <p>Twój wynik:</p>
+            <div class="final-score" id="final-score"></div>
+            <p id="end-message"></p>
+            <button onclick="restartGame()">Zagraj ponownie</button>
+        </div>
+    </div>
+
+    <script>
+        const QUESTIONS = [
+            { sentence: "Mama piecze ___ na urodziny.", answer: "tort", hint: "Coś słodkiego ze świeczkami" },
+            { sentence: "W nocy na niebie świeci ___.", answer: "księżyc", hint: "Jest okrągły i jasny" },
+            { sentence: "Pies macha ___ na powitanie.", answer: "ogonem", hint: "Pies ma to z tyłu" },
+            { sentence: "Rano jem ___ na śniadanie.", answer: "kanapkę", hint: "Coś z chlebem" },
+            { sentence: "___ mieszka w lesie i zbiera orzechy.", answer: "wiewiórka", hint: "Małe rude zwierzątko z puszystym ogonem" },
+            { sentence: "Dzieci bawią się na ___.", answer: "podwórku", hint: "Miejsce przed domem do zabawy" },
+            { sentence: "Zimą pada biały ___.", answer: "śnieg", hint: "Można z niego lepić bałwana" },
+            { sentence: "Kot pije ___ z miski.", answer: "mleko", hint: "Biały napój" },
+            { sentence: "Tata czyta ___ przed snem.", answer: "bajkę", hint: "Historia z książki" },
+            { sentence: "___ pływa w stawie.", answer: "żaba", hint: "Zielona i kumka" },
+            { sentence: "W szkole piszemy w ___.", answer: "zeszycie", hint: "Ma kartki w linie lub kratkę" },
+            { sentence: "Ptaki budują ___ na drzewie.", answer: "gniazdo", hint: "Dom dla ptaków" },
+            { sentence: "Samochód jedzie po ___.", answer: "drodze", hint: "Asfaltowa nawierzchnia" },
+            { sentence: "Ryby pływają w ___.", answer: "morzu", hint: "Duży zbiornik słonej wody" },
+            { sentence: "Słońce wschodzi ___.", answer: "rano", hint: "Pora dnia, kiedy się budzimy" },
+            { sentence: "___ daje nam miód.", answer: "pszczoła", hint: "Latający owad w żółto-czarne paski" },
+            { sentence: "Na obiad jemy ___ z klopsikami.", answer: "makaron", hint: "Długie lub krótkie, gotowane w wodzie" },
+            { sentence: "W zimie nosimy czapkę i ___.", answer: "szalik", hint: "Owijamy nim szyję" },
+            { sentence: "Babcia robi na drutach ___.", answer: "sweter", hint: "Ciepłe ubranie wkładane przez głowę" },
+            { sentence: "Listonosz przynosi ___.", answer: "listy", hint: "Wkłada je do skrzynki pocztowej" },
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let shuffled = [];
+        let answered = false;
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function normalize(str) {
+            return str.toLowerCase().trim()
+                .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e')
+                .replace(/ł/g, 'l').replace(/ń/g, 'n').replace(/ó/g, 'o')
+                .replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z');
+        }
+
+        function showQuestion() {
+            const q = shuffled[currentIndex];
+            const parts = q.sentence.split('___');
+            document.getElementById('sentence').innerHTML =
+                parts[0] + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + parts[1];
+            document.getElementById('hint').textContent = 'Podpowiedź: ' + q.hint;
+            document.getElementById('question-num').textContent = currentIndex + 1;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').disabled = false;
+            document.getElementById('check-btn').disabled = false;
+            document.getElementById('feedback').className = 'feedback hidden';
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('input-section').style.display = '';
+            document.getElementById('answer-input').focus();
+            answered = false;
+        }
+
+        function checkAnswer() {
+            if (answered) return;
+            const input = document.getElementById('answer-input').value;
+            if (input.trim() === '') return;
+
+            const q = shuffled[currentIndex];
+            const isCorrect = normalize(input) === normalize(q.answer);
+            const fb = document.getElementById('feedback');
+
+            answered = true;
+
+            if (isCorrect) {
+                score++;
+                document.getElementById('score').textContent = score;
+                fb.textContent = 'Brawo! Odpowiedź jest poprawna!';
+                fb.className = 'feedback correct';
+            } else {
+                fb.textContent = 'Niestety! Poprawna odpowiedź to: ' + q.answer;
+                fb.className = 'feedback wrong';
+            }
+
+            document.getElementById('answer-input').disabled = true;
+            document.getElementById('check-btn').disabled = true;
+            document.getElementById('next-btn').classList.remove('hidden');
+            document.getElementById('next-btn').focus();
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex >= shuffled.length) {
+                showEndScreen();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showEndScreen() {
+            document.getElementById('game-screen').style.display = 'none';
+            const end = document.getElementById('end-screen');
+            end.style.display = 'block';
+            document.getElementById('final-score').textContent = score + ' / ' + shuffled.length;
+
+            let msg = '';
+            const pct = score / shuffled.length;
+            if (pct === 1) msg = 'Perfekcyjnie! Jesteś mistrzem polskich słówek!';
+            else if (pct >= 0.8) msg = 'Świetny wynik! Tak trzymaj!';
+            else if (pct >= 0.5) msg = 'Dobra robota! Ćwicz dalej!';
+            else msg = 'Nie poddawaj się! Spróbuj jeszcze raz!';
+            document.getElementById('end-message').textContent = msg;
+        }
+
+        function restartGame() {
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = '0';
+            shuffled = shuffle(QUESTIONS);
+            document.getElementById('question-total').textContent = shuffled.length;
+            document.getElementById('end-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = '';
+            showQuestion();
+        }
+
+        function insertChar(ch) {
+            const input = document.getElementById('answer-input');
+            if (input.disabled) return;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const val = input.value;
+            input.value = val.substring(0, start) + ch + val.substring(end);
+            input.selectionStart = input.selectionEnd = start + 1;
+            input.focus();
+        }
+
+        // Enter = sprawdź lub następne
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                if (answered && currentIndex < shuffled.length - 1) {
+                    nextQuestion();
+                } else if (answered && currentIndex >= shuffled.length - 1) {
+                    showEndScreen();
+                } else {
+                    checkAnswer();
+                }
+            }
+        });
+
+        // Start
+        restartGame();
+    </script>
+</body>
+</html>
