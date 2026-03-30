@@ -32,6 +32,7 @@
 
         .screen { display: none; }
         .screen.active { display: block; }
+        #setup-screen { display: block; }
 
         /* ═══════ SETUP ═══════ */
         .setup-title { font-size: 1.4em; color: #4a3f8a; margin-bottom: 18px; }
@@ -312,6 +313,7 @@
             <p class="hint" id="hint"></p>
         </div>
 
+        <p style="font-size:0.9em;color:#888;margin-bottom:6px;">Podpowiedzi:</p>
         <div class="suggestions" id="suggestions"></div>
         <div class="feedback" id="feedback"></div>
 
@@ -386,8 +388,13 @@ let timerInterval = null;
 
 /* ═══════ EKRANY ═══════ */
 function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+    });
+    const target = document.getElementById(id);
+    target.classList.add('active');
+    target.style.display = 'block';
 }
 
 /* ═══════ SETUP ═══════ */
