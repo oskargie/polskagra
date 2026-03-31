@@ -4,263 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polskie Słówka - Gra Edukacyjna</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .game-container {
-            background: white;
-            border-radius: 24px;
-            padding: 36px;
-            max-width: 740px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        h1 { font-size: 2em; color: #4a3f8a; margin-bottom: 6px; }
-        .subtitle { color: #888; font-size: 1em; margin-bottom: 20px; }
-
-        .screen { display: none; }
-        .screen.active { display: block; }
-        #setup-screen { display: block; }
-
-        /* ═══════ SETUP ═══════ */
-        .setup-title { font-size: 1.4em; color: #4a3f8a; margin-bottom: 18px; }
-
-        .player-count-btns {
-            display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;
-        }
-        .player-count-btns button {
-            font-size: 1.15em; padding: 10px 28px;
-            border: 3px solid #d4ccf7; border-radius: 12px;
-            background: #f8f6ff; color: #4a3f8a; cursor: pointer;
-            transition: all 0.2s;
-        }
-        .player-count-btns button.selected {
-            background: #764ba2; color: white; border-color: #764ba2;
-        }
-
-        .player-inputs { max-width: 400px; margin: 0 auto 24px; }
-        .player-input-row {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-        }
-        .player-dot {
-            width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
-        }
-        .player-input-row input {
-            flex: 1; font-size: 1.1em; padding: 10px 14px;
-            border: 2px solid #d4ccf7; border-radius: 10px; outline: none;
-        }
-        .player-input-row input:focus { border-color: #764ba2; }
-
-        .start-btn {
-            font-size: 1.3em; padding: 14px 48px;
-            background: #764ba2; color: white; border: none;
-            border-radius: 14px; cursor: pointer; transition: background 0.2s;
-        }
-        .start-btn:hover { background: #5a3880; }
-
-        /* ═══════ HANDOFF ═══════ */
-        .handoff-card {
-            padding: 40px 20px;
-        }
-        .handoff-name {
-            font-size: 2.4em; font-weight: bold; margin-bottom: 8px;
-        }
-        .handoff-sub {
-            font-size: 1.2em; color: #666; margin-bottom: 32px;
-        }
-        .ready-btn {
-            font-size: 1.3em; padding: 16px 48px;
-            background: #764ba2; color: white; border: none;
-            border-radius: 14px; cursor: pointer; transition: background 0.2s;
-        }
-        .ready-btn:hover { background: #5a3880; }
-
-        /* ═══════ GAME ═══════ */
-        .player-banner {
-            display: inline-block;
-            padding: 6px 20px; border-radius: 20px;
-            color: white; font-weight: bold; font-size: 1.1em;
-            margin-bottom: 14px;
-        }
-
-        .status-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
-        }
-        .status-pill {
-            background: #f0f0f0; padding: 8px 16px; border-radius: 12px;
-            font-size: 1em; color: #555; white-space: nowrap;
-        }
-
-        /* timer */
-        .timer-wrap {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 4px; flex: 1; min-width: 120px;
-        }
-        .timer-display {
-            font-size: 2em; font-weight: bold; color: #4a3f8a; line-height: 1;
-            transition: color 0.4s;
-        }
-        .timer-display.warn   { color: #e67e22; }
-        .timer-display.danger { color: #e74c3c; }
-        .timer-bar-track {
-            width: 100%; max-width: 160px; height: 8px;
-            background: #e0e0e0; border-radius: 4px; overflow: hidden;
-        }
-        .timer-bar-fill {
-            height: 100%; background: #4a3f8a; border-radius: 4px;
-            transition: width 1s linear, background 0.4s;
-        }
-        .timer-bar-fill.warn   { background: #e67e22; }
-        .timer-bar-fill.danger { background: #e74c3c; }
-
-        /* zdanie */
-        .sentence-box {
-            background: #f8f6ff; border: 3px solid #d4ccf7; border-radius: 16px;
-            padding: 28px 24px 20px; margin-bottom: 18px;
-            font-size: 1.45em; line-height: 1.7; color: #333;
-        }
-        .blank {
-            display: inline-block; min-width: 110px;
-            border-bottom: 3px dashed #764ba2; color: #764ba2;
-            font-weight: bold; padding: 0 4px;
-        }
-        .hint { color: #999; font-size: 0.78em; margin-top: 10px; font-style: italic; }
-
-        /* sugestie */
-        .suggestions {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 10px; margin-bottom: 18px;
-        }
-        .suggestion {
-            background: #f0eeff; border: 2px solid #c9bef5; border-radius: 12px;
-            padding: 10px 14px; font-size: 1.1em;
-            display: flex; align-items: center; gap: 10px;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .suggestion.reveal-correct { background: #d4edda; border-color: #28a745; }
-        .suggestion.reveal-wrong   { background: #f0f0f0; border-color: #ccc; color: #aaa; }
-        .suggestion-letter {
-            font-weight: bold; font-size: 1.1em; color: #764ba2; min-width: 22px;
-        }
-        .suggestion.reveal-correct .suggestion-letter { color: #155724; }
-        .suggestion.reveal-wrong   .suggestion-letter { color: #aaa; }
-
-        /* pole wpisywania */
-        .input-area {
-            display: flex; gap: 12px; justify-content: center;
-            align-items: center; flex-wrap: wrap; margin-bottom: 12px;
-        }
-        .input-area input {
-            font-size: 1.25em; padding: 12px 18px; border: 3px solid #d4ccf7;
-            border-radius: 12px; outline: none; width: 240px; text-align: center;
-            transition: border-color 0.2s;
-        }
-        .input-area input:focus { border-color: #764ba2; }
-        .input-area input.correct { border-color: #28a745; background: #f0fff4; }
-        .input-area input.wrong   { border-color: #e74c3c; background: #fff5f5; }
-
-        .input-area button {
-            font-size: 1.15em; padding: 12px 26px; background: #764ba2;
-            color: white; border: none; border-radius: 12px; cursor: pointer;
-            transition: background 0.2s;
-        }
-        .input-area button:hover:not(:disabled) { background: #5a3880; }
-        .input-area button:disabled { background: #bbb; cursor: default; }
-
-        /* klawiatura polska */
-        .polish-keys {
-            display: flex; justify-content: center; gap: 5px;
-            flex-wrap: wrap; margin-bottom: 16px;
-        }
-        .polish-keys button {
-            font-size: 1.05em; padding: 7px 12px; background: #eee;
-            border: 2px solid #ccc; border-radius: 8px; cursor: pointer;
-            transition: background 0.15s;
-        }
-        .polish-keys button:hover { background: #d4ccf7; }
-
-        /* feedback */
-        .feedback {
-            font-size: 1.2em; padding: 14px; border-radius: 12px;
-            margin-bottom: 16px; display: flex; align-items: center;
-            justify-content: center; gap: 10px; min-height: 52px;
-            visibility: hidden;
-        }
-        .feedback.correct { background: #d4edda; color: #155724; visibility: visible; }
-        .feedback.wrong   { background: #f8d7da; color: #721c24; visibility: visible; }
-        .feedback.timeout { background: #fff3cd; color: #856404; visibility: visible; }
-
-        .next-btn {
-            font-size: 1.1em; padding: 12px 32px; background: #667eea;
-            color: white; border: none; border-radius: 12px; cursor: pointer;
-            transition: background 0.2s;
-        }
-        .next-btn:hover { background: #5568d3; }
-        .next-btn.hidden { display: none; }
-
-        /* ═══ tablica wyników w grze ═══ */
-        .scoreboard {
-            display: flex; justify-content: center; gap: 10px;
-            flex-wrap: wrap; margin-top: 18px; padding-top: 14px;
-            border-top: 2px solid #eee;
-        }
-        .sb-player {
-            display: flex; align-items: center; gap: 6px;
-            background: #f8f6ff; padding: 6px 14px; border-radius: 10px;
-            font-size: 0.95em; transition: transform 0.2s;
-        }
-        .sb-player.current { transform: scale(1.08); font-weight: bold; }
-        .sb-dot {
-            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
-        }
-
-        /* ═══════ END SCREEN ═══════ */
-        .end-screen h2 { font-size: 1.8em; color: #4a3f8a; margin-bottom: 16px; }
-
-        .leaderboard {
-            max-width: 400px; margin: 0 auto 20px; text-align: left;
-        }
-        .lb-row {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 16px; border-radius: 12px; margin-bottom: 8px;
-            font-size: 1.15em;
-        }
-        .lb-row.first { background: #fff8e1; border: 2px solid #ffd54f; }
-        .lb-row:not(.first) { background: #f5f5f5; }
-        .lb-rank {
-            font-weight: bold; font-size: 1.3em; min-width: 32px; text-align: center;
-        }
-        .lb-name { flex: 1; }
-        .lb-score { font-weight: bold; color: #764ba2; }
-
-        .end-screen button {
-            font-size: 1.2em; padding: 14px 36px; background: #764ba2;
-            color: white; border: none; border-radius: 12px; cursor: pointer;
-            margin-top: 16px;
-        }
-        .end-screen button:hover { background: #5a3880; }
-
-        /* animacja */
-        @keyframes pop {
-            0%   { transform: scale(1); }
-            50%  { transform: scale(1.4); }
-            100% { transform: scale(1); }
-        }
-        .pop { animation: pop 0.35s ease; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="game-container">
@@ -280,7 +24,7 @@
 
         <div class="player-inputs" id="player-inputs"></div>
 
-        <button class="start-btn" onclick="startGame()">Rozpocznij grę</button>
+        <button class="btn-primary" onclick="startGame()">Rozpocznij grę</button>
     </div>
 
     <!-- ═══ EKRAN PRZEKAZANIA ═══ -->
@@ -288,462 +32,120 @@
         <h1>Polskie Słówka</h1>
         <div class="handoff-card">
             <div class="handoff-name" id="handoff-name"></div>
-            <div class="handoff-sub">Twoja kolej! Przygotuj się.</div>
-            <button class="ready-btn" onclick="showGameScreen()">Gotowy!</button>
+            <div class="handoff-sub" id="handoff-sub">Twoja kolej! Przygotuj się.</div>
+            <button class="btn-primary" id="handoff-btn">Gotowy!</button>
         </div>
     </div>
 
-    <!-- ═══ EKRAN GRY ═══ -->
-    <div id="game-screen" class="screen">
-        <div class="player-banner" id="player-banner"></div>
+    <!-- ═══ FAZA 1: UZUPEŁNIANIE ZDAŃ ═══ -->
+    <div id="phase1-screen" class="screen">
+        <div class="player-banner" id="p1-banner"></div>
 
         <div class="status-bar">
-            <div class="status-pill">Pytanie: <strong id="question-num">1</strong>&nbsp;/&nbsp;<strong id="question-total">20</strong></div>
+            <div class="status-pill">Runda: <strong id="p1-round">1</strong> / <strong id="p1-rounds-total">5</strong></div>
             <div class="timer-wrap">
                 <div class="timer-display" id="timer-display">60</div>
                 <div class="timer-bar-track">
                     <div class="timer-bar-fill" id="timer-bar"></div>
                 </div>
             </div>
-            <div class="status-pill">Wynik: <strong id="score">0</strong> pkt</div>
+            <div class="status-pill">Wynik: <strong id="p1-score">0</strong> pkt</div>
         </div>
 
         <div class="sentence-box">
             <p id="sentence"></p>
-            <p class="hint" id="hint"></p>
+            <p class="hint" id="p1-hint"></p>
         </div>
 
-        <p style="font-size:0.9em;color:#888;margin-bottom:6px;">Podpowiedzi:</p>
+        <p class="suggestions-label">Podpowiedzi:</p>
         <div class="suggestions" id="suggestions"></div>
-        <div class="feedback" id="feedback"></div>
+        <div class="feedback" id="p1-feedback"></div>
 
-        <div id="input-section">
+        <div id="p1-input-section">
             <div class="input-area">
-                <input type="text" id="answer-input" placeholder="Wpisz słowo…" autocomplete="off">
-                <button id="check-btn" onclick="checkAnswer()">Sprawdź</button>
+                <input type="text" id="p1-answer" placeholder="Wpisz słowo…" autocomplete="off">
+                <button id="p1-check-btn" onclick="p1CheckAnswer()">Sprawdź</button>
             </div>
-            <div class="polish-keys">
-                <button onclick="insertChar('ą')">ą</button>
-                <button onclick="insertChar('ć')">ć</button>
-                <button onclick="insertChar('ę')">ę</button>
-                <button onclick="insertChar('ł')">ł</button>
-                <button onclick="insertChar('ń')">ń</button>
-                <button onclick="insertChar('ó')">ó</button>
-                <button onclick="insertChar('ś')">ś</button>
-                <button onclick="insertChar('ź')">ź</button>
-                <button onclick="insertChar('ż')">ż</button>
+            <div class="polish-keys" id="p1-polish-keys">
+                <button onclick="insertCharTo('p1-answer','ą')">ą</button>
+                <button onclick="insertCharTo('p1-answer','ć')">ć</button>
+                <button onclick="insertCharTo('p1-answer','ę')">ę</button>
+                <button onclick="insertCharTo('p1-answer','ł')">ł</button>
+                <button onclick="insertCharTo('p1-answer','ń')">ń</button>
+                <button onclick="insertCharTo('p1-answer','ó')">ó</button>
+                <button onclick="insertCharTo('p1-answer','ś')">ś</button>
+                <button onclick="insertCharTo('p1-answer','ź')">ź</button>
+                <button onclick="insertCharTo('p1-answer','ż')">ż</button>
             </div>
         </div>
 
-        <button class="next-btn hidden" id="next-btn" onclick="nextTurn()">Dalej ▶</button>
+        <button class="next-btn hidden" id="p1-next-btn" onclick="p1Next()">Dalej ▶</button>
+        <div class="scoreboard" id="p1-scoreboard"></div>
+    </div>
 
-        <div class="scoreboard" id="scoreboard"></div>
+    <!-- ═══ EKRAN PRZEJŚCIA MIĘDZY FAZAMI ═══ -->
+    <div id="transition-screen" class="screen">
+        <div class="phase-icon">🔤</div>
+        <div class="phase-title">Faza 2: Szubienica!</div>
+        <div class="phase-desc">
+            Odgadujcie słowo litera po literze.<br>
+            Każdy gracz po kolei podaje literę lub próbuje zgadnąć całe słowo.<br>
+            Macie 7 szans na błąd w każdej rundzie!
+        </div>
+        <button class="btn-primary" onclick="startPhase2()">Zaczynamy!</button>
+    </div>
+
+    <!-- ═══ FAZA 2: SZUBIENICA ═══ -->
+    <div id="phase2-screen" class="screen">
+        <div class="player-banner" id="p2-banner"></div>
+
+        <div class="hangman-info">
+            <div class="status-pill">Runda: <strong id="p2-round">1</strong> / 5</div>
+            <div class="status-pill">Wynik: <strong id="p2-score">0</strong> pkt</div>
+        </div>
+
+        <p class="hint" id="p2-hint" style="margin-bottom:14px;"></p>
+        <div class="word-display" id="word-display"></div>
+        <div class="wrong-counter" id="wrong-counter"></div>
+        <div class="feedback" id="p2-feedback"></div>
+
+        <div id="p2-play-area">
+            <div class="alphabet-grid" id="alphabet-grid"></div>
+
+            <details class="guess-word-section">
+                <summary>Zgadnij całe słowo</summary>
+                <div class="input-area" style="margin-top:8px;">
+                    <input type="text" id="p2-word-input" placeholder="Wpisz całe słowo…" autocomplete="off">
+                    <button class="btn-action" onclick="p2GuessWord()">Zgadnij</button>
+                </div>
+                <div class="polish-keys">
+                    <button onclick="insertCharTo('p2-word-input','ą')">ą</button>
+                    <button onclick="insertCharTo('p2-word-input','ć')">ć</button>
+                    <button onclick="insertCharTo('p2-word-input','ę')">ę</button>
+                    <button onclick="insertCharTo('p2-word-input','ł')">ł</button>
+                    <button onclick="insertCharTo('p2-word-input','ń')">ń</button>
+                    <button onclick="insertCharTo('p2-word-input','ó')">ó</button>
+                    <button onclick="insertCharTo('p2-word-input','ś')">ś</button>
+                    <button onclick="insertCharTo('p2-word-input','ź')">ź</button>
+                    <button onclick="insertCharTo('p2-word-input','ż')">ż</button>
+                </div>
+            </details>
+        </div>
+
+        <button class="next-btn hidden" id="p2-next-btn" onclick="p2NextRound()">Następna runda ▶</button>
+        <div class="scoreboard" id="p2-scoreboard"></div>
     </div>
 
     <!-- ═══ EKRAN KOŃCOWY ═══ -->
-    <div id="end-screen" class="screen end-screen">
+    <div id="end-screen" class="screen">
         <h2>Koniec gry!</h2>
         <div class="leaderboard" id="leaderboard"></div>
-        <button onclick="backToSetup()">Zagraj ponownie</button>
+        <button class="btn-primary" onclick="backToSetup()">Zagraj ponownie</button>
     </div>
+
 </div>
 
-<script>
-const QUESTIONS = [
-    { sentence: "Mama piecze ___ na urodziny.",                answer: "tort",       hint: "Coś słodkiego ze świeczkami" },
-    { sentence: "W nocy na niebie świeci ___.",                answer: "księżyc",    hint: "Jest okrągły i jasny" },
-    { sentence: "Pies macha ___ na powitanie.",                answer: "ogonem",     hint: "Pies ma to z tyłu" },
-    { sentence: "Rano jem ___ na śniadanie.",                  answer: "kanapkę",    hint: "Coś z chlebem" },
-    { sentence: "___ mieszka w lesie i zbiera orzechy.",       answer: "wiewiórka",  hint: "Małe rude zwierzątko z puszystym ogonem" },
-    { sentence: "Dzieci bawią się na ___.",                    answer: "podwórku",   hint: "Miejsce przed domem do zabawy" },
-    { sentence: "Zimą pada biały ___.",                        answer: "śnieg",      hint: "Można z niego lepić bałwana" },
-    { sentence: "Kot pije ___ z miski.",                       answer: "mleko",      hint: "Biały napój" },
-    { sentence: "Tata czyta ___ przed snem.",                  answer: "bajkę",      hint: "Historia z książki" },
-    { sentence: "___ pływa w stawie.",                         answer: "żaba",       hint: "Zielona i kumka" },
-    { sentence: "W szkole piszemy w ___.",                     answer: "zeszycie",   hint: "Ma kartki w linie lub kratkę" },
-    { sentence: "Ptaki budują ___ na drzewie.",                answer: "gniazdo",    hint: "Dom dla ptaków" },
-    { sentence: "Samochód jedzie po ___.",                     answer: "drodze",     hint: "Asfaltowa nawierzchnia" },
-    { sentence: "Ryby pływają w ___.",                         answer: "morzu",      hint: "Duży zbiornik słonej wody" },
-    { sentence: "Słońce wschodzi ___.",                        answer: "rano",       hint: "Pora dnia, kiedy się budzimy" },
-    { sentence: "___ daje nam miód.",                          answer: "pszczoła",   hint: "Latający owad w żółto-czarne paski" },
-    { sentence: "Na obiad jemy ___ z klopsikami.",             answer: "makaron",    hint: "Długie lub krótkie, gotowane w wodzie" },
-    { sentence: "W zimie nosimy czapkę i ___.",                answer: "szalik",     hint: "Owijamy nim szyję" },
-    { sentence: "Babcia robi na drutach ___.",                 answer: "sweter",     hint: "Ciepłe ubranie wkładane przez głowę" },
-    { sentence: "Listonosz przynosi ___.",                     answer: "listy",      hint: "Wkłada je do skrzynki pocztowej" },
-    { sentence: "___ lata i ma kolorowe skrzydła.",            answer: "motyl",      hint: "Lubi siadać na kwiatach" },
-    { sentence: "Chłopiec jedzie na ___ do szkoły.",           answer: "rowerze",    hint: "Jednoślad z dwoma kołami" },
-    { sentence: "Kura znosi ___ w gnieździe.",                 answer: "jajka",      hint: "Okrągłe, w twardej skorupce" },
-    { sentence: "Astronauta leci w ___.",                      answer: "kosmos",     hint: "Tam są gwiazdy i planety" },
-    { sentence: "___ ma osiem nóg i plecie sieć.",             answer: "pająk",      hint: "Łapie muchy w pajęczynę" },
-    { sentence: "Słoń ma długą ___.",                          answer: "trąbę",      hint: "Używa jej do picia wody" },
-    { sentence: "___ jest królem wszystkich zwierząt.",        answer: "lew",        hint: "Duży kot z grzywą" },
-    { sentence: "Lekarz leczy ___.",                           answer: "chorych",    hint: "Osoby, które się źle czują" },
-    { sentence: "Strażak gasi ___.",                           answer: "pożar",      hint: "Wielki ogień, który się rozprzestrzenia" },
-    { sentence: "Pilot steruje ___.",                          answer: "samolotem",  hint: "Wielki pojazd latający" },
-    { sentence: "Nauczyciel pisze na ___.",                    answer: "tablicy",    hint: "Czarna lub biała powierzchnia w klasie" },
-    { sentence: "W bibliotece wypożyczamy ___.",               answer: "książki",    hint: "Mają kartki i opowiadają historię" },
-    { sentence: "___ ma długą szyję i je liście z drzew.",     answer: "żyrafa",     hint: "Najwyższe zwierzę na świecie" },
-    { sentence: "Na plaży budujemy zamki z ___.",              answer: "piasku",     hint: "Drobne żółte ziarnka na plaży" },
-    { sentence: "Zegar mierzy ___.",                           answer: "czas",       hint: "Godziny, minuty i sekundy" },
-    { sentence: "Księżniczka mieszka w wysokim ___.",          answer: "zamku",      hint: "Budowla z wieżyczkami i fosą" },
-    { sentence: "___ kroczy wolno i nosi dom na grzbiecie.",   answer: "żółw",       hint: "Reptil z twardą skorupą" },
-    { sentence: "Kucharz gotuje zupę w ___.",                  answer: "garnku",     hint: "Duże metalowe naczynie z pokrywką" },
-    { sentence: "Pociąg jedzie po ___.",                       answer: "torach",     hint: "Metalowe szyny na podłożu" },
-    { sentence: "Bałwan ma marchewkę zamiast ___.",            answer: "nosa",       hint: "Środkowa część twarzy, wąchamy nim" },
-    { sentence: "Oczami ___.",                                 answer: "widzimy",    hint: "Co robimy za pomocą oczu?" },
-    { sentence: "Uszami ___.",                                 answer: "słyszymy",   hint: "Co robimy za pomocą uszu?" },
-    { sentence: "Piłkarz kopie ___ do bramki.",                answer: "piłkę",      hint: "Okrągły przedmiot do gry w nogę" },
-    { sentence: "Tęcza pojawia się po ___.",                   answer: "deszczu",    hint: "Woda spadająca z chmur" },
-    { sentence: "Jabłko i gruszka to ___.",                    answer: "owoce",      hint: "Rosną na drzewach, są słodkie" },
-    { sentence: "Marchew i ziemniak to ___.",                  answer: "warzywa",    hint: "Rosną w ziemi lub na łodydze" },
-    { sentence: "Muzyk gra na ___.",                           answer: "gitarze",    hint: "Instrument z sześcioma strunami" },
-    { sentence: "Czerwony Kapturek szedł do ___.",             answer: "babci",      hint: "Starsza kobieta, mama mamy lub taty" },
-    { sentence: "Złota rybka spełnia trzy ___.",               answer: "życzenia",   hint: "Prośby, które chcemy spełnić" },
-    { sentence: "___ śpi w norze przez całą zimę.",            answer: "niedźwiedź", hint: "Duże brązowe zwierzę leśne" },
-    { sentence: "Wiosną na drzewach pojawiają się zielone ___.", answer: "liście",   hint: "Płaskie i zielone części drzewa" },
-     { sentence: "Mumuś jest taka ___.",                     answer: "słodka",      hint: "Jak cukierek" },
-    { sentence: "Maxy ma duży _____ jak pinokio",             answer: "nos"        hint: "gluty"  },
-{ sentence: "Jojo jest bardzo ______ jak Mumuś",              answer: "słodki"      hint: "słodziak"}, 
-
-];
-
-const PLAYER_COLORS = ['#e74c3c', '#3498db', '#27ae60', '#f39c12'];
-const PLAYER_NAMES_DEFAULT = ['Gracz 1', 'Gracz 2', 'Gracz 3', 'Gracz 4'];
-const LETTERS = ['A', 'B', 'C', 'D'];
-const MAX_TIME = 90;
-
-let playerCount = 2;
-let players = [];       // { name, color, score }
-let currentPlayerIdx = 0;
-let currentQuestionIdx = 0;
-let shuffled = [];
-let answered = false;
-let timeLeft = MAX_TIME;
-let timerInterval = null;
-
-/* ═══════ EKRANY ═══════ */
-function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-        s.style.display = 'none';
-    });
-    const target = document.getElementById(id);
-    target.classList.add('active');
-    target.style.display = 'block';
-}
-
-/* ═══════ SETUP ═══════ */
-function setPlayerCount(n) {
-    playerCount = n;
-    document.querySelectorAll('#count-btns button').forEach(b => b.classList.remove('selected'));
-    document.getElementById('cnt-' + n).classList.add('selected');
-    renderPlayerInputs();
-}
-
-function renderPlayerInputs() {
-    const c = document.getElementById('player-inputs');
-    c.innerHTML = '';
-    for (let i = 0; i < playerCount; i++) {
-        const row = document.createElement('div');
-        row.className = 'player-input-row';
-        row.innerHTML =
-            `<div class="player-dot" style="background:${PLAYER_COLORS[i]}"></div>` +
-            `<input type="text" id="pname-${i}" placeholder="${PLAYER_NAMES_DEFAULT[i]}" maxlength="16">`;
-        c.appendChild(row);
-    }
-}
-
-function startGame() {
-    players = [];
-    for (let i = 0; i < playerCount; i++) {
-        const inp = document.getElementById('pname-' + i);
-        const name = (inp && inp.value.trim()) || PLAYER_NAMES_DEFAULT[i];
-        players.push({ name, color: PLAYER_COLORS[i], score: 0 });
-    }
-    currentPlayerIdx = 0;
-    currentQuestionIdx = 0;
-    shuffled = shuffle(QUESTIONS);
-    document.getElementById('question-total').textContent = shuffled.length;
-
-    if (playerCount === 1) {
-        // tryb jednoosobowy — od razu do gry
-        showScreen('game-screen');
-        updatePlayerBanner();
-        renderScoreboard();
-        showQuestion();
-    } else {
-        showHandoff();
-    }
-}
-
-/* ═══════ HANDOFF ═══════ */
-function showHandoff() {
-    const p = players[currentPlayerIdx];
-    const el = document.getElementById('handoff-name');
-    el.textContent = p.name;
-    el.style.color = p.color;
-    showScreen('handoff-screen');
-}
-
-function showGameScreen() {
-    showScreen('game-screen');
-    updatePlayerBanner();
-    renderScoreboard();
-    showQuestion();
-}
-
-/* ═══════ UI GRACZY ═══════ */
-function updatePlayerBanner() {
-    const p = players[currentPlayerIdx];
-    const banner = document.getElementById('player-banner');
-    banner.textContent = p.name;
-    banner.style.background = p.color;
-    document.getElementById('score').textContent = p.score;
-}
-
-function renderScoreboard() {
-    const sb = document.getElementById('scoreboard');
-    sb.innerHTML = '';
-    players.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = 'sb-player' + (i === currentPlayerIdx ? ' current' : '');
-        div.innerHTML =
-            `<span class="sb-dot" style="background:${p.color}"></span>` +
-            `<span>${p.name}: <strong>${p.score}</strong> pkt</span>`;
-        sb.appendChild(div);
-    });
-}
-
-/* ═══════ NARZĘDZIA ═══════ */
-function shuffle(arr) {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
-
-function normalize(str) {
-    return str.toLowerCase().trim()
-        .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e')
-        .replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o')
-        .replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z');
-}
-
-function calcPoints(secondsLeft) {
-    return Math.max(1, Math.round(10 * secondsLeft / MAX_TIME));
-}
-
-/* ═══════ TIMER ═══════ */
-function startTimer() {
-    clearInterval(timerInterval);
-    timeLeft = MAX_TIME;
-    updateTimerUI();
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimerUI();
-        if (timeLeft <= 0) { clearInterval(timerInterval); onTimeout(); }
-    }, 1000);
-}
-
-function stopTimer() { clearInterval(timerInterval); }
-
-function updateTimerUI() {
-    const pct = timeLeft / MAX_TIME;
-    const display = document.getElementById('timer-display');
-    const bar     = document.getElementById('timer-bar');
-    const cls = pct > 0.4 ? '' : pct > 0.2 ? 'warn' : 'danger';
-    display.textContent = timeLeft;
-    display.className = 'timer-display ' + cls;
-    bar.style.width = (pct * 100) + '%';
-    bar.className = 'timer-bar-fill ' + cls;
-}
-
-function onTimeout() {
-    if (answered) return;
-    answered = true;
-    const q = shuffled[currentQuestionIdx];
-    document.getElementById('answer-input').disabled = true;
-    document.getElementById('check-btn').disabled = true;
-    const fb = document.getElementById('feedback');
-    fb.textContent = '⏰ Czas minął! Poprawna odpowiedź: ' + q.answer;
-    fb.className = 'feedback timeout';
-    revealSuggestions(null);
-    document.getElementById('next-btn').classList.remove('hidden');
-    document.getElementById('next-btn').focus();
-}
-
-/* ═══════ SUGESTIE ═══════ */
-function buildSuggestions(correctAnswer) {
-    const pool = shuffled
-        .map(q => q.answer)
-        .filter(a => normalize(a) !== normalize(correctAnswer));
-    const distractors = shuffle(pool).slice(0, 3);
-    return shuffle([correctAnswer, ...distractors]);
-}
-
-function renderSuggestions(options) {
-    const container = document.getElementById('suggestions');
-    container.innerHTML = '';
-    options.forEach((opt, i) => {
-        const div = document.createElement('div');
-        div.className = 'suggestion';
-        div.id = 'sug-' + i;
-        div.innerHTML = `<span class="suggestion-letter">${LETTERS[i]}</span>${opt}`;
-        container.appendChild(div);
-    });
-    container.dataset.options = JSON.stringify(options);
-}
-
-function revealSuggestions(correctAnswer) {
-    const container = document.getElementById('suggestions');
-    const options = JSON.parse(container.dataset.options || '[]');
-    const correct = correctAnswer || shuffled[currentQuestionIdx].answer;
-    options.forEach((opt, i) => {
-        const div = document.getElementById('sug-' + i);
-        if (!div) return;
-        div.className = 'suggestion ' +
-            (normalize(opt) === normalize(correct) ? 'reveal-correct' : 'reveal-wrong');
-    });
-}
-
-/* ═══════ PYTANIE ═══════ */
-function showQuestion() {
-    const q = shuffled[currentQuestionIdx];
-    const parts = q.sentence.split('___');
-    document.getElementById('sentence').innerHTML =
-        parts[0] + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + parts[1];
-    document.getElementById('hint').textContent = 'Podpowiedź: ' + q.hint;
-    document.getElementById('question-num').textContent = currentQuestionIdx + 1;
-
-    const input = document.getElementById('answer-input');
-    input.value = '';
-    input.disabled = false;
-    input.className = '';
-    document.getElementById('check-btn').disabled = false;
-    document.getElementById('feedback').className = 'feedback';
-    document.getElementById('next-btn').classList.add('hidden');
-
-    renderSuggestions(buildSuggestions(q.answer));
-    answered = false;
-    startTimer();
-    input.focus();
-}
-
-/* ═══════ SPRAWDZANIE ═══════ */
-function checkAnswer() {
-    if (answered) return;
-    const input = document.getElementById('answer-input');
-    const val = input.value.trim();
-    if (val === '') return;
-
-    stopTimer();
-    answered = true;
-
-    const q = shuffled[currentQuestionIdx];
-    const isCorrect = normalize(val) === normalize(q.answer);
-    const fb = document.getElementById('feedback');
-    const p = players[currentPlayerIdx];
-
-    if (isCorrect) {
-        const pts = calcPoints(timeLeft);
-        p.score += pts;
-        document.getElementById('score').textContent = p.score;
-
-        const scoreEl = document.getElementById('score');
-        scoreEl.classList.remove('pop');
-        void scoreEl.offsetWidth;
-        scoreEl.classList.add('pop');
-
-        input.className = 'correct';
-        fb.innerHTML = `✅ Brawo! +${pts} pkt` + (pts === 10 ? ' 🎉' : '');
-        fb.className = 'feedback correct';
-    } else {
-        input.className = 'wrong';
-        fb.textContent = '❌ Niestety! Poprawna odpowiedź: ' + q.answer;
-        fb.className = 'feedback wrong';
-    }
-
-    input.disabled = true;
-    document.getElementById('check-btn').disabled = true;
-    revealSuggestions(q.answer);
-    renderScoreboard();
-    document.getElementById('next-btn').classList.remove('hidden');
-    document.getElementById('next-btn').focus();
-}
-
-/* ═══════ NASTĘPNA TURA ═══════ */
-function nextTurn() {
-    currentQuestionIdx++;
-    if (currentQuestionIdx >= shuffled.length) {
-        showEndScreen();
-        return;
-    }
-    // następny gracz
-    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
-
-    if (players.length > 1) {
-        showHandoff();
-    } else {
-        updatePlayerBanner();
-        renderScoreboard();
-        showQuestion();
-    }
-}
-
-/* ═══════ KONIEC ═══════ */
-function showEndScreen() {
-    stopTimer();
-    showScreen('end-screen');
-
-    const sorted = [...players].sort((a, b) => b.score - a.score);
-    const ranks = ['🥇', '🥈', '🥉', '4.'];
-    const lb = document.getElementById('leaderboard');
-    lb.innerHTML = '';
-
-    sorted.forEach((p, i) => {
-        const row = document.createElement('div');
-        row.className = 'lb-row' + (i === 0 ? ' first' : '');
-        row.innerHTML =
-            `<span class="lb-rank">${ranks[i] || (i+1)+'.'}</span>` +
-            `<span class="sb-dot" style="background:${p.color}"></span>` +
-            `<span class="lb-name">${p.name}</span>` +
-            `<span class="lb-score">${p.score} pkt</span>`;
-        lb.appendChild(row);
-    });
-}
-
-function backToSetup() {
-    showScreen('setup-screen');
-}
-
-/* ═══════ POLSKIE ZNAKI ═══════ */
-function insertChar(ch) {
-    const input = document.getElementById('answer-input');
-    if (input.disabled) return;
-    const s = input.selectionStart, e = input.selectionEnd;
-    input.value = input.value.substring(0, s) + ch + input.value.substring(e);
-    input.selectionStart = input.selectionEnd = s + 1;
-    input.focus();
-}
-
-/* ═══════ KLAWIATURA ═══════ */
-document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    const active = document.querySelector('.screen.active');
-    if (!active) return;
-
-    if (active.id === 'handoff-screen') {
-        showGameScreen();
-    } else if (active.id === 'game-screen') {
-        if (!answered) checkAnswer();
-        else nextTurn();
-    }
-});
-
-// inicjalizacja ekranu ustawień
-renderPlayerInputs();
-</script>
+<script src="data.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
