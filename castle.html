@@ -480,7 +480,7 @@ function drawCannon(idx) {
         const vx = bx * power;
         const vy = by * power;
         ctx.fillStyle = 'rgba(255,215,0,0.3)';
-        for (let t = 0; t < 60; t++) {
+        for (let t = 0; t < 30; t++) {
             const px = cx + vx * t * 3;
             const py = cy + vy * t * 3 + 0.5 * GRAVITY * (t * 3) * (t * 3);
             if (py > terrainAt(px) || px < -10 || px > W + 10) break;
