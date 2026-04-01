@@ -6,7 +6,7 @@ const PLAYER_COLORS = ['#e74c3c', '#3498db', '#27ae60', '#f39c12'];
 const PLAYER_DEFAULTS = ['Gracz 1', 'Gracz 2', 'Gracz 3', 'Gracz 4'];
 const SUGGESTION_LETTERS = ['A', 'B', 'C', 'D'];
 const MAX_TIME = 90;
-const TOTAL_ROUNDS = 3;
+const TOTAL_ROUNDS = 2;
 const MAX_WRONG = 7;
 
 let playerCount = 2;
@@ -28,7 +28,7 @@ let p2TotalRounds = 0;
 let p2State = null; // { word, category, revealed: Set, wrong: Set, solved: bool }
 
 // Faza 3
-const P3_TURNS_PER_PLAYER = 3;
+const P3_TURNS_PER_PLAYER = 2;
 const P3_POINTS_EXACT = 7;
 const P3_POINTS_NORMALIZED = 5;
 let p3Words = [];
@@ -716,12 +716,7 @@ let cAimDir = 1;
 let cAlivePlayers = [];
 let cBaseGround;
 
-const C_LAYOUTS = {
-    1: [{ x: 350, hill: 0 }],
-    2: [{ x: 90, hill: 0 }, { xFromRight: 90, hill: 0 }],
-    3: [{ x: 80, hill: 0 }, { xCenter: true, hill: 60 }, { xFromRight: 80, hill: 0 }],
-    4: [{ x: 70, hill: 0 }, { x: 260, hill: 55 }, { xFromRight: 260, hill: 55 }, { xFromRight: 70, hill: 0 }]
-};
+let cLayout = []; // generated randomly each game
 
 function startPhase4() {
     cCanvas = document.getElementById('castle-canvas');
@@ -730,6 +725,7 @@ function startPhase4() {
     cH = cCanvas.height;
     cBaseGround = cH - 50;
 
+    cGenerateLayout();
     cBuildTerrain();
     cInitCastles();
     cAlivePlayers = players.map((_, i) => i);
@@ -758,26 +754,53 @@ function startPhase4() {
     };
 }
 
+function cGenerateLayout() {
+    // Losowe pozycje zamków z minimalnym odstępem
+    const margin = 70;        // od krawędzi
+    const minGap = 120;       // minimalny odstęp między zamkami
+    const positions = [];
+
+    for (let i = 0; i < playerCount; i++) {
+        let attempts = 0;
+        let cx;
+        do {
+            cx = margin + Math.random() * (cW - 2 * margin);
+            attempts++;
+        } while (attempts < 200 && positions.some(px => Math.abs(px - cx) < minGap));
+        positions.push(cx);
+    }
+
+    // Sortuj pozycje od lewej do prawej
+    positions.sort((a, b) => a - b);
+
+    // Losowe wzgórza (0-70px)
+    cLayout = positions.map(cx => ({
+        x: cx,
+        hill: Math.random() * 70
+    }));
+}
+
 function cBuildTerrain() {
     cTerrain = new Array(cW);
     for (let x = 0; x < cW; x++) cTerrain[x] = cBaseGround;
 
-    const layout = C_LAYOUTS[playerCount] || C_LAYOUTS[2];
-    layout.forEach(cfg => {
-        const cx = cfg.xCenter ? cW / 2 : cfg.xFromRight ? cW - cfg.xFromRight : cfg.x;
-        if (cfg.hill > 0) {
+    cLayout.forEach(cfg => {
+        if (cfg.hill > 10) {
+            const hillWidth = 80 + Math.random() * 40;
             for (let x = 0; x < cW; x++) {
-                const dist = Math.abs(x - cx);
-                if (dist < 100) {
-                    const t = 1 - dist / 100;
+                const dist = Math.abs(x - cfg.x);
+                if (dist < hillWidth) {
+                    const t = 1 - dist / hillWidth;
                     cTerrain[x] -= cfg.hill * (0.5 + 0.5 * Math.cos(Math.PI * (1 - t)));
                 }
             }
         }
     });
 
+    // Delikatne nierówności
+    const seed1 = Math.random() * 10, seed2 = Math.random() * 10;
     for (let x = 0; x < cW; x++) {
-        cTerrain[x] += Math.sin(x * 0.015) * 3 + Math.sin(x * 0.04) * 1.5;
+        cTerrain[x] += Math.sin(x * 0.015 + seed1) * 3 + Math.sin(x * 0.04 + seed2) * 1.5;
     }
 }
 
@@ -786,12 +809,10 @@ function cTerrainAt(x) {
 }
 
 function cInitCastles() {
-    const layout = C_LAYOUTS[playerCount] || C_LAYOUTS[2];
-    cCastles = layout.map((cfg, i) => {
-        const cx = cfg.xCenter ? cW / 2 : cfg.xFromRight ? cW - cfg.xFromRight : cfg.x;
-        const gy = cTerrainAt(cx);
+    cCastles = cLayout.map((cfg, i) => {
+        const gy = cTerrainAt(cfg.x);
         return {
-            x: cx - C_CW / 2, y: gy - C_CH, groundY: gy,
+            x: cfg.x - C_CW / 2, y: gy - C_CH, groundY: gy,
             w: C_CW, h: C_CH, hp: C_HITS_TO_WIN,
             color: players[i].color, alive: true
         };

@@ -126,25 +126,7 @@ const PDEFAULTS = ['Gracz 1','Gracz 2','Gracz 3','Gracz 4'];
 // Terrain height map (pixel array)
 let terrain = [];
 
-// Castle layout configs per player count
-// { x: center-x of castle, hill: height of hill under castle }
-const LAYOUTS = {
-    2: [
-        { x: 100, hill: 0 },
-        { x: W - 100, hill: 0 }
-    ],
-    3: [
-        { x: 90, hill: 0 },
-        { x: W / 2, hill: 70 },
-        { x: W - 90, hill: 0 }
-    ],
-    4: [
-        { x: 80, hill: 0 },
-        { x: 330, hill: 65 },
-        { x: W - 330, hill: 65 },
-        { x: W - 80, hill: 0 }
-    ]
-};
+let layout = []; // generated randomly each game
 
 let playerCount = 2;
 let players = [];
@@ -208,6 +190,7 @@ function startGame() {
     document.getElementById('setup').style.display = 'none';
     document.getElementById('game-ui').style.display = 'block';
 
+    generateLayout();
     buildTerrain();
     initCastles();
     alivePlayers = players.map((_, i) => i);
@@ -238,32 +221,48 @@ function backToSetup() {
 
 const BASE_GROUND = H - 55;
 
-function buildTerrain() {
-    terrain = new Array(W);
-    // Start flat
-    for (let x = 0; x < W; x++) terrain[x] = BASE_GROUND;
+function generateLayout() {
+    const margin = 80;
+    const minGap = 140;
+    const positions = [];
 
-    // Add hills under elevated castles
-    const layout = LAYOUTS[playerCount];
-    layout.forEach(cfg => {
-        if (cfg.hill > 0) addHill(cfg.x, cfg.hill, 110);
-    });
-
-    // Gentle random bumps for visual interest
-    for (let x = 0; x < W; x++) {
-        terrain[x] += Math.sin(x * 0.015) * 4 + Math.sin(x * 0.037) * 2;
+    for (let i = 0; i < playerCount; i++) {
+        let attempts = 0;
+        let cx;
+        do {
+            cx = margin + Math.random() * (W - 2 * margin);
+            attempts++;
+        } while (attempts < 200 && positions.some(px => Math.abs(px - cx) < minGap));
+        positions.push(cx);
     }
+
+    positions.sort((a, b) => a - b);
+    layout = positions.map(cx => ({
+        x: cx,
+        hill: Math.random() * 70
+    }));
 }
 
-function addHill(cx, height, width) {
-    for (let x = 0; x < W; x++) {
-        const dist = Math.abs(x - cx);
-        if (dist < width) {
-            const t = 1 - dist / width;
-            // Smooth cosine hill
-            const h = height * (0.5 + 0.5 * Math.cos(Math.PI * (1 - t)));
-            terrain[x] -= h;
+function buildTerrain() {
+    terrain = new Array(W);
+    for (let x = 0; x < W; x++) terrain[x] = BASE_GROUND;
+
+    layout.forEach(cfg => {
+        if (cfg.hill > 10) {
+            const hillWidth = 90 + Math.random() * 50;
+            for (let x = 0; x < W; x++) {
+                const dist = Math.abs(x - cfg.x);
+                if (dist < hillWidth) {
+                    const t = 1 - dist / hillWidth;
+                    terrain[x] -= cfg.hill * (0.5 + 0.5 * Math.cos(Math.PI * (1 - t)));
+                }
+            }
         }
+    });
+
+    const seed1 = Math.random() * 10, seed2 = Math.random() * 10;
+    for (let x = 0; x < W; x++) {
+        terrain[x] += Math.sin(x * 0.015 + seed1) * 4 + Math.sin(x * 0.037 + seed2) * 2;
     }
 }
 
@@ -277,7 +276,6 @@ function terrainAt(x) {
    ═══════════════════════════════════════ */
 
 function initCastles() {
-    const layout = LAYOUTS[playerCount];
     castles = layout.map((cfg, i) => {
         const groundY = terrainAt(cfg.x);
         return {
