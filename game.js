@@ -651,7 +651,7 @@ function p3CheckAnswer() {
 function p3Next() {
     p3Index++;
     if (p3Index >= p3Words.length) {
-        showEndScreen();
+        showTransition3();
         return;
     }
 
@@ -663,6 +663,493 @@ function p3Next() {
     } else {
         p3ShowQuestion();
     }
+}
+
+/* ═══════════════════════════════════════════
+   PRZEJŚCIE DO FAZY 4
+   ═══════════════════════════════════════════ */
+
+function showTransition3() {
+    // Przy jednym graczu nie ma bitwy zamków
+    if (playerCount === 1) {
+        showEndScreen();
+        return;
+    }
+
+    // Oblicz strzały: 1 za każde 10 pkt
+    players.forEach(p => {
+        p.shots = Math.max(1, Math.floor(p.score / 10));
+    });
+
+    const container = document.getElementById('shots-summary');
+    container.innerHTML = '';
+    players.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'shots-row';
+        row.innerHTML =
+            `<span class="sb-dot" style="background:${p.color}"></span>` +
+            `<span>${p.name}: ${p.score} pkt → <strong>${p.shots} strzał${p.shots === 1 ? '' : p.shots < 5 ? 'y' : 'ów'}</strong></span>`;
+        container.appendChild(row);
+    });
+
+    showScreen('transition3-screen');
+}
+
+/* ═══════════════════════════════════════════
+   FAZA 4 — oblężenie zamków
+   ═══════════════════════════════════════════ */
+
+const C_GRAVITY = 0.15;
+const C_HITS_TO_WIN = 5;
+const C_CW = 60, C_CH = 70;
+
+let cCanvas, cCtx, cW, cH;
+let cTerrain = [];
+let cCastles = [];
+let cProjectile = null;
+let cParticles = [];
+let cTrail = [];
+let cWind = 0;
+let cCanFire = true;
+let cGameOver = false;
+let cAimDir = 1;
+let cAlivePlayers = [];
+let cBaseGround;
+
+const C_LAYOUTS = {
+    1: [{ x: 350, hill: 0 }],
+    2: [{ x: 90, hill: 0 }, { xFromRight: 90, hill: 0 }],
+    3: [{ x: 80, hill: 0 }, { xCenter: true, hill: 60 }, { xFromRight: 80, hill: 0 }],
+    4: [{ x: 70, hill: 0 }, { x: 260, hill: 55 }, { xFromRight: 260, hill: 55 }, { xFromRight: 70, hill: 0 }]
+};
+
+function startPhase4() {
+    cCanvas = document.getElementById('castle-canvas');
+    cCtx = cCanvas.getContext('2d');
+    cW = cCanvas.width;
+    cH = cCanvas.height;
+    cBaseGround = cH - 50;
+
+    cBuildTerrain();
+    cInitCastles();
+    cAlivePlayers = players.map((_, i) => i);
+    currentPlayerIdx = 0;
+    cAimDir = 1;
+    cGameOver = false;
+    cProjectile = null;
+    cParticles = [];
+    cTrail = [];
+    cCanFire = true;
+
+    cRandomWind();
+    cSetDefaultDir();
+    cUpdateTurnUI();
+    showScreen('phase4-screen');
+    cDraw();
+
+    // Slider events
+    document.getElementById('castle-angle').oninput = function() {
+        document.getElementById('castle-angle-val').textContent = this.value + '°';
+        cDraw();
+    };
+    document.getElementById('castle-power').oninput = function() {
+        document.getElementById('castle-power-val').textContent = this.value;
+        cDraw();
+    };
+}
+
+function cBuildTerrain() {
+    cTerrain = new Array(cW);
+    for (let x = 0; x < cW; x++) cTerrain[x] = cBaseGround;
+
+    const layout = C_LAYOUTS[playerCount] || C_LAYOUTS[2];
+    layout.forEach(cfg => {
+        const cx = cfg.xCenter ? cW / 2 : cfg.xFromRight ? cW - cfg.xFromRight : cfg.x;
+        if (cfg.hill > 0) {
+            for (let x = 0; x < cW; x++) {
+                const dist = Math.abs(x - cx);
+                if (dist < 100) {
+                    const t = 1 - dist / 100;
+                    cTerrain[x] -= cfg.hill * (0.5 + 0.5 * Math.cos(Math.PI * (1 - t)));
+                }
+            }
+        }
+    });
+
+    for (let x = 0; x < cW; x++) {
+        cTerrain[x] += Math.sin(x * 0.015) * 3 + Math.sin(x * 0.04) * 1.5;
+    }
+}
+
+function cTerrainAt(x) {
+    return cTerrain[Math.max(0, Math.min(cW - 1, Math.round(x)))];
+}
+
+function cInitCastles() {
+    const layout = C_LAYOUTS[playerCount] || C_LAYOUTS[2];
+    cCastles = layout.map((cfg, i) => {
+        const cx = cfg.xCenter ? cW / 2 : cfg.xFromRight ? cW - cfg.xFromRight : cfg.x;
+        const gy = cTerrainAt(cx);
+        return {
+            x: cx - C_CW / 2, y: gy - C_CH, groundY: gy,
+            w: C_CW, h: C_CH, hp: C_HITS_TO_WIN,
+            color: players[i].color, alive: true
+        };
+    });
+}
+
+/* ─── Castle drawing ─── */
+
+function cDarken(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    let r = Math.max(0, (n >> 16) - amt);
+    let g = Math.max(0, ((n >> 8) & 0xff) - amt);
+    let b = Math.max(0, (n & 0xff) - amt);
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+function cDrawSky() {
+    const grad = cCtx.createLinearGradient(0, 0, 0, cBaseGround);
+    grad.addColorStop(0, '#0a1628');
+    grad.addColorStop(0.5, '#1a3050');
+    grad.addColorStop(1, '#2a5080');
+    cCtx.fillStyle = grad;
+    cCtx.fillRect(0, 0, cW, cH);
+
+    cCtx.fillStyle = '#fff';
+    for (let i = 0; i < 35; i++) {
+        const sx = (i * 137 + 50) % cW;
+        const sy = (i * 97 + 20) % (cBaseGround - 70);
+        cCtx.fillRect(sx, sy, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
+    }
+
+    cCtx.beginPath(); cCtx.arc(cW / 2, 40, 18, 0, Math.PI * 2);
+    cCtx.fillStyle = '#ffe9a0'; cCtx.fill();
+    cCtx.beginPath(); cCtx.arc(cW / 2 + 6, 37, 14, 0, Math.PI * 2);
+    cCtx.fillStyle = '#0a1628'; cCtx.fill();
+}
+
+function cDrawTerrain() {
+    cCtx.beginPath();
+    cCtx.moveTo(0, cH);
+    for (let x = 0; x < cW; x++) cCtx.lineTo(x, cTerrain[x]);
+    cCtx.lineTo(cW, cH);
+    cCtx.closePath();
+    const gG = cCtx.createLinearGradient(0, cBaseGround - 70, 0, cH);
+    gG.addColorStop(0, '#3d7a2a');
+    gG.addColorStop(0.3, '#2d5a1e');
+    gG.addColorStop(1, '#1a3a10');
+    cCtx.fillStyle = gG;
+    cCtx.fill();
+
+    cCtx.strokeStyle = '#5a9a38'; cCtx.lineWidth = 2;
+    cCtx.beginPath(); cCtx.moveTo(0, cTerrain[0]);
+    for (let x = 1; x < cW; x += 2) cCtx.lineTo(x, cTerrain[x]);
+    cCtx.stroke();
+}
+
+function cDrawCastle(c, idx) {
+    if (!c.alive) return;
+    const dmg = C_HITS_TO_WIN - c.hp;
+    const x = c.x, y = c.y, w = c.w, h = c.h;
+
+    cCtx.fillStyle = cDarken(c.color, dmg * 15);
+    cCtx.fillRect(x, y, w, h);
+
+    cCtx.strokeStyle = 'rgba(0,0,0,0.2)'; cCtx.lineWidth = 1;
+    for (let row = 0; row < 4; row++) {
+        const ry = y + 10 + row * 15;
+        cCtx.beginPath(); cCtx.moveTo(x, ry); cCtx.lineTo(x + w, ry); cCtx.stroke();
+    }
+
+    // Battlements
+    const crenW = 10, crenH = 9, crenGap = 5;
+    const totalCren = Math.floor((w + crenGap) / (crenW + crenGap));
+    const sx = x + (w - totalCren * (crenW + crenGap) + crenGap) / 2;
+    cCtx.fillStyle = cDarken(c.color, dmg * 15);
+    for (let i = 0; i < totalCren; i++) {
+        if (dmg > i && i > 0 && i < totalCren - 1) continue;
+        cCtx.fillRect(sx + i * (crenW + crenGap), y - crenH, crenW, crenH);
+    }
+
+    // Door
+    const dw = 14, dh = 22;
+    const dx = x + (w - dw) / 2, dy = y + h - dh;
+    cCtx.fillStyle = '#4a3520';
+    cCtx.beginPath();
+    cCtx.moveTo(dx, dy + dh); cCtx.lineTo(dx, dy + dw / 2);
+    cCtx.arc(dx + dw / 2, dy + dw / 2, dw / 2, Math.PI, 0);
+    cCtx.lineTo(dx + dw, dy + dh); cCtx.fill();
+
+    // Flag
+    if (c.hp > 0) {
+        const fx = x + w / 2, fy = y - crenH;
+        cCtx.strokeStyle = '#555'; cCtx.lineWidth = 2;
+        cCtx.beginPath(); cCtx.moveTo(fx, fy); cCtx.lineTo(fx, fy - 22); cCtx.stroke();
+        cCtx.fillStyle = c.color;
+        cCtx.beginPath();
+        cCtx.moveTo(fx, fy - 22); cCtx.lineTo(fx + 13, fy - 17); cCtx.lineTo(fx, fy - 12); cCtx.fill();
+    }
+
+    // Cracks
+    cCtx.strokeStyle = '#333'; cCtx.lineWidth = 2;
+    for (let i = 0; i < dmg; i++) {
+        const cx = x + 8 + (i * 27) % (w - 14);
+        const cy = y + 10 + (i * 17) % (h - 20);
+        cCtx.beginPath();
+        cCtx.moveTo(cx, cy); cCtx.lineTo(cx + 6, cy + 9); cCtx.lineTo(cx + 1, cy + 13);
+        cCtx.moveTo(cx + 6, cy + 9); cCtx.lineTo(cx + 12, cy + 6);
+        cCtx.stroke();
+    }
+
+    // HP bar
+    const bw = 48, bh = 6;
+    const bx = x + (w - bw) / 2, by = y - crenH - 32;
+    cCtx.fillStyle = 'rgba(0,0,0,0.5)'; cCtx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+    cCtx.fillStyle = '#444'; cCtx.fillRect(bx, by, bw, bh);
+    const pct = c.hp / C_HITS_TO_WIN;
+    cCtx.fillStyle = pct > 0.4 ? '#2ecc71' : pct > 0.2 ? '#f39c12' : '#e74c3c';
+    cCtx.fillRect(bx, by, bw * pct, bh);
+
+    cCtx.fillStyle = '#fff'; cCtx.font = 'bold 10px sans-serif'; cCtx.textAlign = 'center';
+    cCtx.fillText(c.hp + '/' + C_HITS_TO_WIN, x + w / 2, by - 3);
+
+    // Name
+    cCtx.fillStyle = c.color; cCtx.font = 'bold 12px sans-serif';
+    cCtx.fillText(players[idx].name, x + w / 2, by - 14);
+
+    // Highlight current
+    if (idx === currentPlayerIdx && cCanFire && !cGameOver) {
+        cCtx.strokeStyle = '#ffd700'; cCtx.lineWidth = 2; cCtx.setLineDash([4, 4]);
+        cCtx.strokeRect(x - 3, y - crenH - 3, w + 6, h + crenH + 6);
+        cCtx.setLineDash([]);
+    }
+}
+
+function cDrawCannon(idx) {
+    const c = cCastles[idx];
+    if (!c.alive) return;
+    const cx = c.x + c.w / 2, cy = c.y + 14;
+    const isActive = idx === currentPlayerIdx && cCanFire && !cGameOver;
+    const angle = isActive ? parseInt(document.getElementById('castle-angle').value) : 45;
+    const dir = isActive ? cAimDir : (c.x < cW / 2 ? 1 : -1);
+    const rad = -angle * Math.PI / 180;
+    const bx = Math.cos(rad) * dir, by = Math.sin(rad);
+
+    cCtx.fillStyle = '#444';
+    cCtx.beginPath(); cCtx.arc(cx, cy, 7, 0, Math.PI * 2); cCtx.fill();
+
+    cCtx.save(); cCtx.translate(cx, cy);
+    cCtx.rotate(Math.atan2(by, bx));
+    cCtx.fillStyle = '#333'; cCtx.fillRect(0, -3, 20, 6);
+    cCtx.fillStyle = '#555'; cCtx.fillRect(17, -4, 4, 8);
+    cCtx.restore();
+}
+
+function cDrawProjectile() {
+    if (!cProjectile) return;
+    cCtx.fillStyle = 'rgba(255,150,0,0.6)';
+    cTrail.forEach(tp => {
+        cCtx.beginPath(); cCtx.arc(tp.x, tp.y, tp.r * tp.life, 0, Math.PI * 2); cCtx.fill();
+    });
+    cCtx.fillStyle = '#222';
+    cCtx.beginPath(); cCtx.arc(cProjectile.x, cProjectile.y, 4, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#ff6600';
+    cCtx.beginPath(); cCtx.arc(cProjectile.x - 1, cProjectile.y - 1, 1.5, 0, Math.PI * 2); cCtx.fill();
+}
+
+function cDrawParticles() {
+    cParticles.forEach(p => {
+        cCtx.fillStyle = p.color; cCtx.globalAlpha = p.life;
+        cCtx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    cCtx.globalAlpha = 1;
+}
+
+function cDraw() {
+    cCtx.clearRect(0, 0, cW, cH);
+    cDrawSky();
+    cDrawTerrain();
+    cCastles.forEach((c, i) => cDrawCastle(c, i));
+    cCastles.forEach((_, i) => cDrawCannon(i));
+    cDrawProjectile();
+    cDrawParticles();
+}
+
+/* ─── Castle controls ─── */
+
+function castleToggleDir() {
+    cAimDir *= -1;
+    document.getElementById('castle-dir-btn').textContent = cAimDir === -1 ? '← Lewo' : 'Prawo →';
+    cDraw();
+}
+
+function cSetDefaultDir() {
+    const c = cCastles[currentPlayerIdx];
+    cAimDir = (c.x + c.w / 2 < cW / 2) ? 1 : -1;
+    document.getElementById('castle-dir-btn').textContent = cAimDir === -1 ? '← Lewo' : 'Prawo →';
+}
+
+function cRandomWind() {
+    cWind = (Math.random() - 0.5) * 0.08;
+    const dir = cWind > 0 ? '→' : '←';
+    const s = Math.abs(cWind);
+    const str = s < 0.02 ? 'Słaby' : s < 0.05 ? 'Umiarkowany' : 'Silny';
+    document.getElementById('castle-wind').textContent = 'Wiatr: ' + str + ' ' + dir;
+}
+
+function cUpdateTurnUI() {
+    const p = players[currentPlayerIdx];
+    const el = document.getElementById('castle-turn-name');
+    el.textContent = p.name;
+    el.style.color = p.color;
+    document.getElementById('castle-shots-left').textContent = p.shots;
+}
+
+/* ─── Castle fire ─── */
+
+function castleFire() {
+    if (!cCanFire || cGameOver) return;
+    const p = players[currentPlayerIdx];
+    if (p.shots <= 0) return;
+
+    cCanFire = false;
+    document.getElementById('castle-fire-btn').disabled = true;
+    p.shots--;
+    document.getElementById('castle-shots-left').textContent = p.shots;
+
+    const c = cCastles[currentPlayerIdx];
+    const cx = c.x + c.w / 2, cy = c.y + 14;
+    const angle = parseInt(document.getElementById('castle-angle').value);
+    const power = parseInt(document.getElementById('castle-power').value) * 0.3;
+    const rad = -angle * Math.PI / 180;
+    const bx = Math.cos(rad) * cAimDir, by = Math.sin(rad);
+
+    cProjectile = {
+        x: cx + bx * 24, y: cy + by * 24,
+        vx: bx * power, vy: by * power
+    };
+    cTrail = [];
+    requestAnimationFrame(cUpdateProjectile);
+}
+
+function cUpdateProjectile() {
+    if (!cProjectile) return;
+
+    cProjectile.vx += cWind;
+    cProjectile.vy += C_GRAVITY;
+    cProjectile.x += cProjectile.vx;
+    cProjectile.y += cProjectile.vy;
+
+    cTrail.push({ x: cProjectile.x, y: cProjectile.y, r: 2.5 + Math.random() * 1.5, life: 1 });
+    cTrail = cTrail.filter(tp => { tp.life -= 0.05; return tp.life > 0; });
+
+    // Hit check
+    for (let i = 0; i < cCastles.length; i++) {
+        if (i === currentPlayerIdx || !cCastles[i].alive) continue;
+        const oc = cCastles[i];
+        if (cProjectile.x > oc.x && cProjectile.x < oc.x + oc.w &&
+            cProjectile.y > oc.y && cProjectile.y < oc.y + oc.h) {
+            oc.hp--;
+            cSpawnExplosion(cProjectile.x, cProjectile.y, players[currentPlayerIdx].color);
+            cProjectile = null;
+            if (oc.hp <= 0) {
+                oc.alive = false;
+                cAlivePlayers = cAlivePlayers.filter(p => p !== i);
+                cSpawnExplosion(oc.x + oc.w / 2, oc.y + oc.h / 2, oc.color);
+            }
+            if (cAlivePlayers.length <= 1) {
+                setTimeout(() => cEndGame(cAlivePlayers[0]), 500);
+            } else {
+                setTimeout(cNextTurn, 700);
+            }
+            cDraw();
+            return;
+        }
+    }
+
+    // Ground / OOB
+    const groundHere = cTerrainAt(cProjectile.x);
+    if (cProjectile.y > groundHere || cProjectile.x < -20 || cProjectile.x > cW + 20) {
+        if (cProjectile.y >= groundHere - 4 && cProjectile.x > 0 && cProjectile.x < cW) {
+            cSpawnExplosion(cProjectile.x, groundHere - 2, '#8B7355');
+        }
+        cProjectile = null;
+        setTimeout(cNextTurn, 500);
+        cDraw();
+        return;
+    }
+
+    cDraw();
+    requestAnimationFrame(cUpdateProjectile);
+}
+
+function cSpawnExplosion(x, y, color) {
+    for (let i = 0; i < 24; i++) {
+        cParticles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5 - 1.5,
+            size: 2 + Math.random() * 3,
+            life: 1,
+            color: i % 3 === 0 ? color : i % 3 === 1 ? '#ff9900' : '#ffcc00'
+        });
+    }
+    cAnimateParticles();
+}
+
+function cAnimateParticles() {
+    if (cParticles.length === 0) return;
+    cParticles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= 0.03; });
+    cParticles = cParticles.filter(p => p.life > 0);
+    cDraw();
+    if (cParticles.length > 0) requestAnimationFrame(cAnimateParticles);
+}
+
+/* ─── Castle turns ─── */
+
+function cNextTurn() {
+    // Sprawdź czy ktokolwiek ma jeszcze strzały
+    const anyShots = cAlivePlayers.some(i => players[i].shots > 0);
+    if (!anyShots) {
+        // Gra się kończy — wygrywa zamek z największym HP
+        let bestIdx = cAlivePlayers[0];
+        let bestHp = cCastles[bestIdx].hp;
+        for (const i of cAlivePlayers) {
+            if (cCastles[i].hp > bestHp) { bestHp = cCastles[i].hp; bestIdx = i; }
+        }
+        cEndGame(bestIdx);
+        return;
+    }
+
+    // Następny żywy gracz z strzałami
+    let next = currentPlayerIdx;
+    do {
+        next = (next + 1) % playerCount;
+    } while (!cCastles[next].alive || players[next].shots <= 0);
+
+    currentPlayerIdx = next;
+    cRandomWind();
+    cSetDefaultDir();
+    cUpdateTurnUI();
+    cCanFire = true;
+    document.getElementById('castle-fire-btn').disabled = false;
+    cDraw();
+}
+
+function cEndGame(winnerIdx) {
+    cGameOver = true;
+    // Dodaj bonusowe punkty zwycięzcy
+    players[winnerIdx].score += 20;
+
+    const wc = cCastles[winnerIdx];
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            cSpawnExplosion(wc.x + Math.random() * wc.w, wc.y - 15 - Math.random() * 30, '#ffd700');
+        }, i * 200);
+    }
+
+    setTimeout(showEndScreen, 1500);
 }
 
 /* ═══════════════════════════════════════════
@@ -699,9 +1186,22 @@ function backToSetup() {
    ═══════════════════════════════════════════ */
 
 document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
     const active = document.querySelector('.screen.active');
     if (!active) return;
+
+    // Strzałki dla fazy zamków
+    if (active.id === 'phase4-screen') {
+        const aEl = document.getElementById('castle-angle');
+        const pEl = document.getElementById('castle-power');
+        if (e.key === 'ArrowUp') { aEl.value = Math.min(85, +aEl.value + 1); aEl.oninput(); return; }
+        if (e.key === 'ArrowDown') { aEl.value = Math.max(5, +aEl.value - 1); aEl.oninput(); return; }
+        if (e.key === 'ArrowRight') { pEl.value = Math.min(100, +pEl.value + 2); pEl.oninput(); return; }
+        if (e.key === 'ArrowLeft') { pEl.value = Math.max(10, +pEl.value - 2); pEl.oninput(); return; }
+        if (e.key === 'd' || e.key === 'D') { castleToggleDir(); return; }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); castleFire(); return; }
+    }
+
+    if (e.key !== 'Enter') return;
 
     if (active.id === 'handoff-screen') {
         if (handoffCallback) handoffCallback();
@@ -719,6 +1219,8 @@ document.addEventListener('keydown', e => {
     } else if (active.id === 'phase3-screen') {
         if (!p3Answered) p3CheckAnswer();
         else p3Next();
+    } else if (active.id === 'transition3-screen') {
+        startPhase4();
     }
 });
 

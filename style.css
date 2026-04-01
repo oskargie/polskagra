@@ -14,7 +14,7 @@ body {
     background: white;
     border-radius: 24px;
     padding: 36px;
-    max-width: 740px;
+    max-width: 780px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     text-align: center;
@@ -274,6 +274,44 @@ h2 { font-size: 1.8em; color: #4a3f8a; margin-bottom: 12px; }
     font-size: 2em; font-weight: bold; color: #764ba2;
     text-transform: capitalize; margin: 0;
 }
+
+/* ═══ PHASE 4: CASTLE BATTLE ═══ */
+#castle-canvas {
+    border-radius: 12px; display: block; margin: 0 auto;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    max-width: 100%; height: auto;
+}
+.castle-info-text { color: #888; font-size: 0.9em; margin-top: 6px; }
+.castle-turn-info { font-size: 1.1em; color: #4a3f8a; margin-top: 6px; font-weight: 500; }
+.castle-pn { font-weight: bold; font-size: 1.15em; }
+.castle-controls {
+    display: flex; gap: 14px; align-items: center; justify-content: center;
+    flex-wrap: wrap; margin-top: 10px;
+}
+.castle-ctrl-group { display: flex; align-items: center; gap: 6px; }
+.castle-ctrl-group label { font-size: 0.95em; color: #555; }
+.castle-ctrl-group input[type=range] { width: 110px; accent-color: #764ba2; }
+.castle-val { font-weight: bold; color: #764ba2; min-width: 32px; }
+.castle-dir-btn {
+    font-size: 1em; padding: 7px 16px; background: #f0eeff;
+    color: #764ba2; border: 2px solid #c9bef5; border-radius: 10px; cursor: pointer;
+}
+.castle-dir-btn:hover { background: #d4ccf7; }
+.castle-fire-btn {
+    font-size: 1.1em; padding: 8px 24px; background: #e74c3c;
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+}
+.castle-fire-btn:hover:not(:disabled) { background: #c0392b; }
+.castle-fire-btn:disabled { background: #bbb; cursor: default; }
+.shots-summary {
+    text-align: left; max-width: 320px; margin: 0 auto 20px;
+    font-size: 1.05em; color: #555;
+}
+.shots-summary .shots-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; border-bottom: 1px solid #eee;
+}
+.shots-summary .shots-row .sb-dot { flex-shrink: 0; }
 
 /* ═══ END SCREEN ═══ */
 .leaderboard { max-width: 400px; margin: 0 auto 20px; text-align: left; }

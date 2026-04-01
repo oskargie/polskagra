@@ -186,6 +186,43 @@
         <div class="scoreboard" id="p3-scoreboard"></div>
     </div>
 
+    <!-- ═══ EKRAN PRZEJŚCIA DO FAZY 4 ═══ -->
+    <div id="transition3-screen" class="screen">
+        <div class="phase-icon">🏰</div>
+        <div class="phase-title">Faza 4: Oblężenie Zamków!</div>
+        <div class="phase-desc">
+            Czas na bitwę! Za każde 10 punktów ze słówek<br>
+            otrzymujesz 1 strzał z armaty.<br>
+            Zniszcz zamki przeciwników!
+        </div>
+        <div class="shots-summary" id="shots-summary"></div>
+        <button class="btn-primary" onclick="startPhase4()">Do boju!</button>
+    </div>
+
+    <!-- ═══ FAZA 4: OBLĘŻENIE ZAMKÓW ═══ -->
+    <div id="phase4-screen" class="screen">
+        <canvas id="castle-canvas" width="700" height="380"></canvas>
+        <div id="castle-wind" class="castle-info-text"></div>
+        <div class="castle-turn-info">
+            Tura: <span class="castle-pn" id="castle-turn-name"></span>
+            &nbsp;|&nbsp; Strzały: <strong id="castle-shots-left">0</strong>
+        </div>
+        <div class="castle-controls">
+            <button id="castle-dir-btn" class="castle-dir-btn" onclick="castleToggleDir()">← Lewo</button>
+            <div class="castle-ctrl-group">
+                <label>Kąt:</label>
+                <input type="range" id="castle-angle" min="5" max="85" value="45">
+                <span class="castle-val" id="castle-angle-val">45°</span>
+            </div>
+            <div class="castle-ctrl-group">
+                <label>Siła:</label>
+                <input type="range" id="castle-power" min="10" max="100" value="50">
+                <span class="castle-val" id="castle-power-val">50</span>
+            </div>
+            <button id="castle-fire-btn" class="castle-fire-btn" onclick="castleFire()">Ognia!</button>
+        </div>
+    </div>
+
     <!-- ═══ EKRAN KOŃCOWY ═══ -->
     <div id="end-screen" class="screen">
         <h2>Koniec gry!</h2>
