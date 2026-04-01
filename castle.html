@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oblężenie Zamków</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            font-family: 'Segoe UI', Tahoma, sans-serif; padding: 10px;
+        }
+        h1 { color: #ffd700; font-size: 1.6em; margin-bottom: 8px; text-align: center; }
+        canvas {
+            border-radius: 12px; display: block;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            max-width: 100%; height: auto;
+        }
+        .controls {
+            display: flex; gap: 20px; align-items: center; justify-content: center;
+            flex-wrap: wrap; margin-top: 12px; color: #fff;
+        }
+        .control-group { display: flex; align-items: center; gap: 8px; }
+        .control-group label { font-size: 1em; min-width: 50px; }
+        .control-group input[type=range] { width: 140px; accent-color: #ffd700; }
+        .control-group .val { font-weight: bold; min-width: 36px; color: #ffd700; }
+        #fire-btn {
+            font-size: 1.2em; padding: 10px 32px; background: #e74c3c;
+            color: #fff; border: none; border-radius: 10px; cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        #fire-btn:hover:not(:disabled) { background: #c0392b; transform: scale(1.05); }
+        #fire-btn:disabled { background: #666; cursor: default; }
+        .turn-info {
+            color: #fff; font-size: 1.1em; margin-top: 8px; text-align: center;
+        }
+        .turn-info .player-name { font-weight: bold; font-size: 1.2em; }
+        #restart-btn {
+            font-size: 1.1em; padding: 10px 28px; background: #27ae60;
+            color: #fff; border: none; border-radius: 10px; cursor: pointer;
+            margin-top: 10px; display: none;
+        }
+        #restart-btn:hover { background: #219a52; }
+        #wind-info {
+            color: #aad; font-size: 0.95em; margin-top: 4px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Oblężenie Zamków</h1>
+<canvas id="game" width="900" height="420"></canvas>
+<div id="wind-info"></div>
+<div class="turn-info">
+    Tura: <span class="player-name" id="turn-name"></span>
+</div>
+<div class="controls">
+    <div class="control-group">
+        <label>Kąt:</label>
+        <input type="range" id="angle" min="5" max="85" value="45">
+        <span class="val" id="angle-val">45°</span>
+    </div>
+    <div class="control-group">
+        <label>Siła:</label>
+        <input type="range" id="power" min="10" max="100" value="50">
+        <span class="val" id="power-val">50</span>
+    </div>
+    <button id="fire-btn" onclick="fire()">Ognia!</button>
+</div>
+<button id="restart-btn" onclick="restart()">Zagraj ponownie</button>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const GROUND_Y = H - 60;
+const GRAVITY = 0.15;
+const HITS_TO_WIN = 5;
+
+const PLAYERS = [
+    { name: 'Gracz 1', color: '#e74c3c', castleX: 90, dir: 1 },
+    { name: 'Gracz 2', color: '#3498db', castleX: W - 90, dir: -1 }
+];
+
+let currentPlayer = 0;
+let castles = [];
+let projectile = null;
+let particles = [];
+let trailParticles = [];
+let gameOver = false;
+let wind = 0;
+let canFire = true;
+
+// Castle dimensions
+const CW = 80, CH = 90;
+const TURRET_W = 16, TURRET_H = 24;
+
+function initCastles() {
+    castles = PLAYERS.map((p, i) => ({
+        x: p.castleX - CW / 2,
+        y: GROUND_Y - CH,
+        w: CW, h: CH,
+        hp: HITS_TO_WIN,
+        color: p.color,
+        rubble: [] // track damage positions
+    }));
+}
+
+function randomWind() {
+    wind = (Math.random() - 0.5) * 0.08;
+    const dir = wind > 0 ? '→' : '←';
+    const strength = Math.abs(wind) < 0.02 ? 'Słaby' : Math.abs(wind) < 0.05 ? 'Umiarkowany' : 'Silny';
+    document.getElementById('wind-info').textContent =
+        'Wiatr: ' + strength + ' ' + dir;
+}
+
+function drawSky() {
+    // Sky gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+    grad.addColorStop(0, '#0a1628');
+    grad.addColorStop(0.5, '#1a3050');
+    grad.addColorStop(1, '#2a5080');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, GROUND_Y);
+
+    // Stars
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 40; i++) {
+        const sx = (i * 137 + 50) % W;
+        const sy = (i * 97 + 20) % (GROUND_Y - 40);
+        const size = (i % 3 === 0) ? 2 : 1;
+        ctx.fillRect(sx, sy, size, size);
+    }
+
+    // Moon
+    ctx.beginPath();
+    ctx.arc(W / 2, 50, 22, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe9a0';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(W / 2 + 8, 46, 18, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a1628';
+    ctx.fill();
+}
+
+function drawGround() {
+    // Ground
+    const gGrad = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+    gGrad.addColorStop(0, '#2d5a1e');
+    gGrad.addColorStop(1, '#1a3a10');
+    ctx.fillStyle = gGrad;
+    ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+
+    // Grass line
+    ctx.strokeStyle = '#4a8a30';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, GROUND_Y);
+    for (let x = 0; x <= W; x += 4) {
+        ctx.lineTo(x, GROUND_Y + Math.sin(x * 0.1) * 2);
+    }
+    ctx.stroke();
+}
+
+function drawCastle(c, playerIdx) {
+    const dmg = HITS_TO_WIN - c.hp;
+    const x = c.x, y = c.y, w = c.w, h = c.h;
+
+    // Castle body
+    ctx.fillStyle = darken(c.color, dmg * 15);
+    ctx.fillRect(x, y, w, h);
+
+    // Stone lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 1;
+    for (let row = 0; row < 6; row++) {
+        const ry = y + 10 + row * 14;
+        ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
+        const offset = row % 2 === 0 ? 0 : w / 4;
+        for (let col = 0; col < 4; col++) {
+            const cx = x + offset + col * (w / 2);
+            if (cx > x && cx < x + w) {
+                ctx.beginPath(); ctx.moveTo(cx, ry - 14); ctx.lineTo(cx, ry); ctx.stroke();
+            }
+        }
+    }
+
+    // Crenellations (battlements)
+    const crenW = 14, crenH = 12, crenGap = 6;
+    const totalCren = Math.floor((w + crenGap) / (crenW + crenGap));
+    const startX = x + (w - totalCren * (crenW + crenGap) + crenGap) / 2;
+    ctx.fillStyle = darken(c.color, dmg * 15);
+    for (let i = 0; i < totalCren; i++) {
+        // Skip some crenellations based on damage
+        if (dmg > i && i > 0 && i < totalCren - 1) continue;
+        ctx.fillRect(startX + i * (crenW + crenGap), y - crenH, crenW, crenH);
+    }
+
+    // Door
+    const doorW = 18, doorH = 28;
+    const doorX = x + (w - doorW) / 2;
+    const doorY = y + h - doorH;
+    ctx.fillStyle = '#4a3520';
+    ctx.beginPath();
+    ctx.moveTo(doorX, doorY + doorH);
+    ctx.lineTo(doorX, doorY + doorW / 2);
+    ctx.arc(doorX + doorW / 2, doorY + doorW / 2, doorW / 2, Math.PI, 0);
+    ctx.lineTo(doorX + doorW, doorY + doorH);
+    ctx.fill();
+
+    // Flag
+    if (c.hp > 0) {
+        const flagX = x + w / 2;
+        const flagY = y - crenH;
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(flagX, flagY); ctx.lineTo(flagX, flagY - 28); ctx.stroke();
+
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.moveTo(flagX, flagY - 28);
+        ctx.lineTo(flagX + 18 * PLAYERS[playerIdx].dir, flagY - 22);
+        ctx.lineTo(flagX, flagY - 16);
+        ctx.fill();
+    }
+
+    // Damage cracks
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < dmg; i++) {
+        const cx = x + 10 + (i * 37) % (w - 20);
+        const cy = y + 15 + (i * 23) % (h - 30);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + 8, cy + 12);
+        ctx.lineTo(cx + 2, cy + 18);
+        ctx.moveTo(cx + 8, cy + 12);
+        ctx.lineTo(cx + 16, cy + 8);
+        ctx.stroke();
+    }
+
+    // Rubble pieces at base
+    ctx.fillStyle = '#888';
+    for (let i = 0; i < dmg * 2; i++) {
+        const rx = x + (i * 31) % w;
+        const ry = y + h + 2 + (i % 3) * 4;
+        const rs = 3 + (i % 4);
+        ctx.fillRect(rx, ry, rs, rs);
+    }
+
+    // HP bar
+    const barW = 60, barH = 8;
+    const barX = x + (w - barW) / 2;
+    const barY = y - crenH - 40;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(barX, barY, barW, barH);
+    const hpPct = c.hp / HITS_TO_WIN;
+    ctx.fillStyle = hpPct > 0.4 ? '#2ecc71' : hpPct > 0.2 ? '#f39c12' : '#e74c3c';
+    ctx.fillRect(barX, barY, barW * hpPct, barH);
+
+    // HP text
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(c.hp + '/' + HITS_TO_WIN, x + w / 2, barY - 4);
+}
+
+function drawCannon(playerIdx) {
+    const p = PLAYERS[playerIdx];
+    const c = castles[playerIdx];
+    const cx = c.x + c.w / 2;
+    const cy = c.y + 20;
+
+    const angle = getAngle();
+    const rad = (playerIdx === 0 ? -angle : -(180 - angle)) * Math.PI / 180;
+    const len = 28;
+
+    // Cannon base
+    ctx.fillStyle = '#444';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cannon barrel
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rad);
+    ctx.fillStyle = '#333';
+    ctx.fillRect(0, -4, len, 8);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(len - 4, -5, 6, 10);
+    ctx.restore();
+
+    // Angle indicator (only for current player)
+    if (playerIdx === currentPlayer && canFire && !gameOver) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, 40, rad - 0.1, rad + 0.1);
+        ctx.stroke();
+        // Dotted trajectory preview
+        const power = getPower() * 0.35;
+        const vx = Math.cos(rad) * power;
+        const vy = Math.sin(rad) * power;
+        ctx.restore();
+
+        ctx.fillStyle = 'rgba(255,215,0,0.3)';
+        for (let t = 0; t < 50; t++) {
+            const px = cx + vx * t * 3;
+            const py = cy + vy * t * 3 + 0.5 * GRAVITY * (t * 3) * (t * 3);
+            if (py > GROUND_Y || px < 0 || px > W) break;
+            ctx.beginPath();
+            ctx.arc(px, py, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+}
+
+function drawProjectile() {
+    if (!projectile) return;
+
+    // Trail
+    ctx.fillStyle = 'rgba(255,150,0,0.6)';
+    trailParticles.forEach(tp => {
+        ctx.beginPath();
+        ctx.arc(tp.x, tp.y, tp.r * tp.life, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Cannonball
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(projectile.x, projectile.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff6600';
+    ctx.beginPath();
+    ctx.arc(projectile.x - 1, projectile.y - 1, 2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    ctx.globalAlpha = 1;
+}
+
+function drawUI() {
+    // Player names above castles
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    PLAYERS.forEach((p, i) => {
+        ctx.fillStyle = p.color;
+        ctx.fillText(p.name, castles[i].x + castles[i].w / 2, castles[i].y - 52 - 14);
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawSky();
+    drawGround();
+    castles.forEach((c, i) => drawCastle(c, i));
+    PLAYERS.forEach((_, i) => drawCannon(i));
+    drawProjectile();
+    drawParticles();
+    drawUI();
+}
+
+function getAngle() { return parseInt(document.getElementById('angle').value); }
+function getPower() { return parseInt(document.getElementById('power').value); }
+
+function fire() {
+    if (!canFire || gameOver) return;
+    canFire = false;
+    document.getElementById('fire-btn').disabled = true;
+
+    const p = PLAYERS[currentPlayer];
+    const c = castles[currentPlayer];
+    const cx = c.x + c.w / 2;
+    const cy = c.y + 20;
+    const angle = getAngle();
+    const power = getPower() * 0.35;
+    const rad = (currentPlayer === 0 ? -angle : -(180 - angle)) * Math.PI / 180;
+
+    projectile = {
+        x: cx + Math.cos(rad) * 30,
+        y: cy + Math.sin(rad) * 30,
+        vx: Math.cos(rad) * power,
+        vy: Math.sin(rad) * power
+    };
+    trailParticles = [];
+
+    requestAnimationFrame(updateProjectile);
+}
+
+function updateProjectile() {
+    if (!projectile) return;
+
+    projectile.vx += wind;
+    projectile.vy += GRAVITY;
+    projectile.x += projectile.vx;
+    projectile.y += projectile.vy;
+
+    // Trail
+    trailParticles.push({
+        x: projectile.x, y: projectile.y,
+        r: 3 + Math.random() * 2, life: 1
+    });
+    trailParticles = trailParticles.filter(tp => {
+        tp.life -= 0.05;
+        return tp.life > 0;
+    });
+
+    // Check hit on opponent castle
+    const opIdx = 1 - currentPlayer;
+    const oc = castles[opIdx];
+    if (projectile.x > oc.x && projectile.x < oc.x + oc.w &&
+        projectile.y > oc.y && projectile.y < oc.y + oc.h) {
+        // Hit!
+        oc.hp--;
+        spawnExplosion(projectile.x, projectile.y, PLAYERS[currentPlayer].color);
+        projectile = null;
+
+        if (oc.hp <= 0) {
+            endGame(currentPlayer);
+        } else {
+            setTimeout(nextTurn, 800);
+        }
+        draw();
+        return;
+    }
+
+    // Check out of bounds or ground hit
+    if (projectile.y > GROUND_Y || projectile.x < -20 || projectile.x > W + 20) {
+        if (projectile.y > GROUND_Y - 5) {
+            spawnExplosion(projectile.x, GROUND_Y - 3, '#8B7355');
+        }
+        projectile = null;
+        setTimeout(nextTurn, 600);
+        draw();
+        return;
+    }
+
+    draw();
+    requestAnimationFrame(updateProjectile);
+}
+
+function spawnExplosion(x, y, color) {
+    for (let i = 0; i < 30; i++) {
+        particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6 - 2,
+            size: 2 + Math.random() * 4,
+            life: 1,
+            color: i % 3 === 0 ? color : i % 3 === 1 ? '#ff9900' : '#ffcc00'
+        });
+    }
+    animateParticles();
+}
+
+function animateParticles() {
+    if (particles.length === 0) return;
+    particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.1;
+        p.life -= 0.03;
+    });
+    particles = particles.filter(p => p.life > 0);
+    draw();
+    if (particles.length > 0) requestAnimationFrame(animateParticles);
+}
+
+function nextTurn() {
+    currentPlayer = 1 - currentPlayer;
+    randomWind();
+    updateTurnUI();
+    canFire = true;
+    document.getElementById('fire-btn').disabled = false;
+}
+
+function updateTurnUI() {
+    const p = PLAYERS[currentPlayer];
+    const el = document.getElementById('turn-name');
+    el.textContent = p.name;
+    el.style.color = p.color;
+}
+
+function endGame(winnerIdx) {
+    gameOver = true;
+    const el = document.getElementById('turn-name');
+    el.textContent = PLAYERS[winnerIdx].name + ' wygrywa!';
+    el.style.color = PLAYERS[winnerIdx].color;
+    document.getElementById('fire-btn').disabled = true;
+    document.getElementById('restart-btn').style.display = 'inline-block';
+
+    // Victory explosion
+    const wc = castles[winnerIdx];
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            spawnExplosion(
+                wc.x + Math.random() * wc.w,
+                wc.y - 20 - Math.random() * 40,
+                '#ffd700'
+            );
+        }, i * 200);
+    }
+}
+
+function restart() {
+    gameOver = false;
+    currentPlayer = 0;
+    projectile = null;
+    particles = [];
+    trailParticles = [];
+    canFire = true;
+    initCastles();
+    randomWind();
+    updateTurnUI();
+    document.getElementById('fire-btn').disabled = false;
+    document.getElementById('restart-btn').style.display = 'none';
+    draw();
+}
+
+function darken(hex, amount) {
+    const num = parseInt(hex.slice(1), 16);
+    let r = (num >> 16) - amount;
+    let g = ((num >> 8) & 0xff) - amount;
+    let b = (num & 0xff) - amount;
+    r = Math.max(0, r); g = Math.max(0, g); b = Math.max(0, b);
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+// Slider live update
+document.getElementById('angle').addEventListener('input', e => {
+    document.getElementById('angle-val').textContent = e.target.value + '°';
+    draw();
+});
+document.getElementById('power').addEventListener('input', e => {
+    document.getElementById('power-val').textContent = e.target.value;
+    draw();
+});
+
+// Keyboard: Enter to fire, arrows to adjust
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fire();
+    }
+    const angleEl = document.getElementById('angle');
+    const powerEl = document.getElementById('power');
+    if (e.key === 'ArrowUp') {
+        angleEl.value = Math.min(85, parseInt(angleEl.value) + 1);
+        angleEl.dispatchEvent(new Event('input'));
+    } else if (e.key === 'ArrowDown') {
+        angleEl.value = Math.max(5, parseInt(angleEl.value) - 1);
+        angleEl.dispatchEvent(new Event('input'));
+    } else if (e.key === 'ArrowRight') {
+        powerEl.value = Math.min(100, parseInt(powerEl.value) + 2);
+        powerEl.dispatchEvent(new Event('input'));
+    } else if (e.key === 'ArrowLeft') {
+        powerEl.value = Math.max(10, parseInt(powerEl.value) - 2);
+        powerEl.dispatchEvent(new Event('input'));
+    }
+});
+
+// Init
+initCastles();
+randomWind();
+updateTurnUI();
+draw();
+</script>
+</body>
+</html>
