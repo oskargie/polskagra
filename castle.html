@@ -13,158 +13,337 @@
             font-family: 'Segoe UI', Tahoma, sans-serif; padding: 10px;
         }
         h1 { color: #ffd700; font-size: 1.6em; margin-bottom: 8px; text-align: center; }
+        .subtitle { color: #aab; font-size: 0.95em; margin-bottom: 16px; text-align: center; }
         canvas {
             border-radius: 12px; display: block;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             max-width: 100%; height: auto;
         }
+
+        /* Setup */
+        #setup {
+            background: rgba(255,255,255,0.07); border-radius: 16px;
+            padding: 28px 36px; max-width: 500px; width: 100%;
+            text-align: center;
+        }
+        .count-btns { display: flex; gap: 10px; justify-content: center; margin: 14px 0 20px; }
+        .count-btns button {
+            font-size: 1.15em; padding: 10px 26px; border: 3px solid #445;
+            border-radius: 12px; background: #223; color: #ccc; cursor: pointer;
+        }
+        .count-btns button.sel { background: #ffd700; color: #111; border-color: #ffd700; font-weight: bold; }
+        .pname-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .pname-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+        .pname-row input {
+            flex: 1; font-size: 1em; padding: 8px 12px; border: 2px solid #445;
+            border-radius: 8px; background: #1a1a2e; color: #eee; outline: none;
+        }
+        .pname-row input:focus { border-color: #ffd700; }
+        .start-btn {
+            font-size: 1.25em; padding: 12px 40px; background: #ffd700; color: #111;
+            border: none; border-radius: 12px; cursor: pointer; font-weight: bold;
+            margin-top: 14px;
+        }
+        .start-btn:hover { background: #ffed4a; }
+
+        /* Game UI */
+        #game-ui { display: none; text-align: center; }
         .controls {
-            display: flex; gap: 20px; align-items: center; justify-content: center;
-            flex-wrap: wrap; margin-top: 12px; color: #fff;
+            display: flex; gap: 16px; align-items: center; justify-content: center;
+            flex-wrap: wrap; margin-top: 10px; color: #fff;
         }
         .control-group { display: flex; align-items: center; gap: 8px; }
         .control-group label { font-size: 1em; min-width: 50px; }
-        .control-group input[type=range] { width: 140px; accent-color: #ffd700; }
+        .control-group input[type=range] { width: 130px; accent-color: #ffd700; }
         .control-group .val { font-weight: bold; min-width: 36px; color: #ffd700; }
+        #dir-btn {
+            font-size: 1.1em; padding: 8px 18px; background: #445; color: #ffd700;
+            border: 2px solid #ffd700; border-radius: 10px; cursor: pointer;
+        }
         #fire-btn {
             font-size: 1.2em; padding: 10px 32px; background: #e74c3c;
             color: #fff; border: none; border-radius: 10px; cursor: pointer;
             transition: background 0.2s, transform 0.1s;
         }
         #fire-btn:hover:not(:disabled) { background: #c0392b; transform: scale(1.05); }
-        #fire-btn:disabled { background: #666; cursor: default; }
-        .turn-info {
-            color: #fff; font-size: 1.1em; margin-top: 8px; text-align: center;
-        }
-        .turn-info .player-name { font-weight: bold; font-size: 1.2em; }
+        #fire-btn:disabled { background: #555; cursor: default; }
+        .turn-info { color: #fff; font-size: 1.1em; margin-top: 8px; }
+        .turn-info .pn { font-weight: bold; font-size: 1.2em; }
+        #wind-info { color: #aad; font-size: 0.95em; margin-top: 4px; }
         #restart-btn {
             font-size: 1.1em; padding: 10px 28px; background: #27ae60;
             color: #fff; border: none; border-radius: 10px; cursor: pointer;
             margin-top: 10px; display: none;
         }
         #restart-btn:hover { background: #219a52; }
-        #wind-info {
-            color: #aad; font-size: 0.95em; margin-top: 4px; text-align: center;
-        }
     </style>
 </head>
 <body>
 
 <h1>Oblężenie Zamków</h1>
-<canvas id="game" width="900" height="420"></canvas>
-<div id="wind-info"></div>
-<div class="turn-info">
-    Tura: <span class="player-name" id="turn-name"></span>
+
+<!-- SETUP -->
+<div id="setup">
+    <p class="subtitle">Wybierz liczbę graczy:</p>
+    <div class="count-btns" id="count-btns"></div>
+    <div id="pname-list"></div>
+    <button class="start-btn" onclick="startGame()">Rozpocznij bitwę!</button>
 </div>
-<div class="controls">
-    <div class="control-group">
-        <label>Kąt:</label>
-        <input type="range" id="angle" min="5" max="85" value="45">
-        <span class="val" id="angle-val">45°</span>
+
+<!-- GAME -->
+<div id="game-ui">
+    <canvas id="game" width="1000" height="500"></canvas>
+    <div id="wind-info"></div>
+    <div class="turn-info">Tura: <span class="pn" id="turn-name"></span></div>
+    <div class="controls">
+        <button id="dir-btn" onclick="toggleDir()">← Lewo</button>
+        <div class="control-group">
+            <label>Kąt:</label>
+            <input type="range" id="angle" min="5" max="85" value="45">
+            <span class="val" id="angle-val">45°</span>
+        </div>
+        <div class="control-group">
+            <label>Siła:</label>
+            <input type="range" id="power" min="10" max="100" value="50">
+            <span class="val" id="power-val">50</span>
+        </div>
+        <button id="fire-btn" onclick="fire()">Ognia!</button>
     </div>
-    <div class="control-group">
-        <label>Siła:</label>
-        <input type="range" id="power" min="10" max="100" value="50">
-        <span class="val" id="power-val">50</span>
-    </div>
-    <button id="fire-btn" onclick="fire()">Ognia!</button>
+    <button id="restart-btn" onclick="backToSetup()">Zagraj ponownie</button>
 </div>
-<button id="restart-btn" onclick="restart()">Zagraj ponownie</button>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
-const GROUND_Y = H - 60;
 const GRAVITY = 0.15;
 const HITS_TO_WIN = 5;
+const CW = 70, CH = 80;
 
-const PLAYERS = [
-    { name: 'Gracz 1', color: '#e74c3c', castleX: 90, dir: 1 },
-    { name: 'Gracz 2', color: '#3498db', castleX: W - 90, dir: -1 }
-];
+const PCOLORS = ['#e74c3c','#3498db','#27ae60','#f39c12'];
+const PDEFAULTS = ['Gracz 1','Gracz 2','Gracz 3','Gracz 4'];
 
-let currentPlayer = 0;
+// Terrain height map (pixel array)
+let terrain = [];
+
+// Castle layout configs per player count
+// { x: center-x of castle, hill: height of hill under castle }
+const LAYOUTS = {
+    2: [
+        { x: 100, hill: 0 },
+        { x: W - 100, hill: 0 }
+    ],
+    3: [
+        { x: 90, hill: 0 },
+        { x: W / 2, hill: 70 },
+        { x: W - 90, hill: 0 }
+    ],
+    4: [
+        { x: 80, hill: 0 },
+        { x: 330, hill: 65 },
+        { x: W - 330, hill: 65 },
+        { x: W - 80, hill: 0 }
+    ]
+};
+
+let playerCount = 2;
+let players = [];
 let castles = [];
+let currentPlayer = 0;
+let aimDir = 1; // 1=right, -1=left
 let projectile = null;
 let particles = [];
-let trailParticles = [];
+let trail = [];
 let gameOver = false;
 let wind = 0;
 let canFire = true;
+let alivePlayers = [];
 
-// Castle dimensions
-const CW = 80, CH = 90;
-const TURRET_W = 16, TURRET_H = 24;
+/* ═══════════════════════════════════════
+   SETUP
+   ═══════════════════════════════════════ */
+
+function buildSetup() {
+    const btns = document.getElementById('count-btns');
+    btns.innerHTML = '';
+    for (let n = 2; n <= 4; n++) {
+        const b = document.createElement('button');
+        b.textContent = n;
+        b.id = 'cnt-' + n;
+        if (n === playerCount) b.className = 'sel';
+        b.onclick = () => pickCount(n);
+        btns.appendChild(b);
+    }
+    renderNameInputs();
+}
+
+function pickCount(n) {
+    playerCount = n;
+    document.querySelectorAll('#count-btns button').forEach(b => b.className = '');
+    document.getElementById('cnt-' + n).className = 'sel';
+    renderNameInputs();
+}
+
+function renderNameInputs() {
+    const c = document.getElementById('pname-list');
+    c.innerHTML = '';
+    for (let i = 0; i < playerCount; i++) {
+        const row = document.createElement('div');
+        row.className = 'pname-row';
+        row.innerHTML =
+            `<div class="pname-dot" style="background:${PCOLORS[i]}"></div>` +
+            `<input id="pn-${i}" placeholder="${PDEFAULTS[i]}" maxlength="14">`;
+        c.appendChild(row);
+    }
+}
+
+function startGame() {
+    players = [];
+    for (let i = 0; i < playerCount; i++) {
+        const inp = document.getElementById('pn-' + i);
+        const name = (inp && inp.value.trim()) || PDEFAULTS[i];
+        players.push({ name, color: PCOLORS[i] });
+    }
+
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game-ui').style.display = 'block';
+
+    buildTerrain();
+    initCastles();
+    alivePlayers = players.map((_, i) => i);
+    currentPlayer = 0;
+    aimDir = 1;
+    gameOver = false;
+    projectile = null;
+    particles = [];
+    trail = [];
+    canFire = true;
+
+    randomWind();
+    updateAimDir();
+    updateTurnUI();
+    draw();
+}
+
+function backToSetup() {
+    document.getElementById('game-ui').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+    document.getElementById('restart-btn').style.display = 'none';
+    buildSetup();
+}
+
+/* ═══════════════════════════════════════
+   TERRAIN
+   ═══════════════════════════════════════ */
+
+const BASE_GROUND = H - 55;
+
+function buildTerrain() {
+    terrain = new Array(W);
+    // Start flat
+    for (let x = 0; x < W; x++) terrain[x] = BASE_GROUND;
+
+    // Add hills under elevated castles
+    const layout = LAYOUTS[playerCount];
+    layout.forEach(cfg => {
+        if (cfg.hill > 0) addHill(cfg.x, cfg.hill, 110);
+    });
+
+    // Gentle random bumps for visual interest
+    for (let x = 0; x < W; x++) {
+        terrain[x] += Math.sin(x * 0.015) * 4 + Math.sin(x * 0.037) * 2;
+    }
+}
+
+function addHill(cx, height, width) {
+    for (let x = 0; x < W; x++) {
+        const dist = Math.abs(x - cx);
+        if (dist < width) {
+            const t = 1 - dist / width;
+            // Smooth cosine hill
+            const h = height * (0.5 + 0.5 * Math.cos(Math.PI * (1 - t)));
+            terrain[x] -= h;
+        }
+    }
+}
+
+function terrainAt(x) {
+    const ix = Math.max(0, Math.min(W - 1, Math.round(x)));
+    return terrain[ix];
+}
+
+/* ═══════════════════════════════════════
+   CASTLES
+   ═══════════════════════════════════════ */
 
 function initCastles() {
-    castles = PLAYERS.map((p, i) => ({
-        x: p.castleX - CW / 2,
-        y: GROUND_Y - CH,
-        w: CW, h: CH,
-        hp: HITS_TO_WIN,
-        color: p.color,
-        rubble: [] // track damage positions
-    }));
+    const layout = LAYOUTS[playerCount];
+    castles = layout.map((cfg, i) => {
+        const groundY = terrainAt(cfg.x);
+        return {
+            x: cfg.x - CW / 2,
+            y: groundY - CH,
+            groundY,
+            w: CW, h: CH,
+            hp: HITS_TO_WIN,
+            color: PCOLORS[i],
+            alive: true
+        };
+    });
 }
 
-function randomWind() {
-    wind = (Math.random() - 0.5) * 0.08;
-    const dir = wind > 0 ? '→' : '←';
-    const strength = Math.abs(wind) < 0.02 ? 'Słaby' : Math.abs(wind) < 0.05 ? 'Umiarkowany' : 'Silny';
-    document.getElementById('wind-info').textContent =
-        'Wiatr: ' + strength + ' ' + dir;
-}
+/* ═══════════════════════════════════════
+   DRAW
+   ═══════════════════════════════════════ */
 
 function drawSky() {
-    // Sky gradient
-    const grad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+    const grad = ctx.createLinearGradient(0, 0, 0, BASE_GROUND);
     grad.addColorStop(0, '#0a1628');
     grad.addColorStop(0.5, '#1a3050');
     grad.addColorStop(1, '#2a5080');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, GROUND_Y);
+    ctx.fillRect(0, 0, W, H);
 
     // Stars
     ctx.fillStyle = '#fff';
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 50; i++) {
         const sx = (i * 137 + 50) % W;
-        const sy = (i * 97 + 20) % (GROUND_Y - 40);
-        const size = (i % 3 === 0) ? 2 : 1;
-        ctx.fillRect(sx, sy, size, size);
+        const sy = (i * 97 + 20) % (BASE_GROUND - 80);
+        ctx.fillRect(sx, sy, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
     }
 
     // Moon
-    ctx.beginPath();
-    ctx.arc(W / 2, 50, 22, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffe9a0';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(W / 2 + 8, 46, 18, 0, Math.PI * 2);
-    ctx.fillStyle = '#0a1628';
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(W / 2, 45, 20, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe9a0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(W / 2 + 7, 42, 16, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a1628'; ctx.fill();
 }
 
-function drawGround() {
-    // Ground
-    const gGrad = ctx.createLinearGradient(0, GROUND_Y, 0, H);
-    gGrad.addColorStop(0, '#2d5a1e');
+function drawTerrain() {
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let x = 0; x < W; x++) ctx.lineTo(x, terrain[x]);
+    ctx.lineTo(W, H);
+    ctx.closePath();
+
+    const gGrad = ctx.createLinearGradient(0, BASE_GROUND - 80, 0, H);
+    gGrad.addColorStop(0, '#3d7a2a');
+    gGrad.addColorStop(0.3, '#2d5a1e');
     gGrad.addColorStop(1, '#1a3a10');
     ctx.fillStyle = gGrad;
-    ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+    ctx.fill();
 
-    // Grass line
-    ctx.strokeStyle = '#4a8a30';
-    ctx.lineWidth = 3;
+    // Grass edge
+    ctx.strokeStyle = '#5a9a38';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, GROUND_Y);
-    for (let x = 0; x <= W; x += 4) {
-        ctx.lineTo(x, GROUND_Y + Math.sin(x * 0.1) * 2);
-    }
+    ctx.moveTo(0, terrain[0]);
+    for (let x = 1; x < W; x += 2) ctx.lineTo(x, terrain[x]);
     ctx.stroke();
 }
 
-function drawCastle(c, playerIdx) {
+function drawCastle(c, idx) {
+    if (!c.alive) return;
     const dmg = HITS_TO_WIN - c.hp;
     const x = c.x, y = c.y, w = c.w, h = c.h;
 
@@ -175,229 +354,220 @@ function drawCastle(c, playerIdx) {
     // Stone lines
     ctx.strokeStyle = 'rgba(0,0,0,0.2)';
     ctx.lineWidth = 1;
-    for (let row = 0; row < 6; row++) {
+    for (let row = 0; row < 5; row++) {
         const ry = y + 10 + row * 14;
         ctx.beginPath(); ctx.moveTo(x, ry); ctx.lineTo(x + w, ry); ctx.stroke();
-        const offset = row % 2 === 0 ? 0 : w / 4;
+        const off = row % 2 === 0 ? 0 : w / 4;
         for (let col = 0; col < 4; col++) {
-            const cx = x + offset + col * (w / 2);
-            if (cx > x && cx < x + w) {
-                ctx.beginPath(); ctx.moveTo(cx, ry - 14); ctx.lineTo(cx, ry); ctx.stroke();
+            const lx = x + off + col * (w / 2);
+            if (lx > x && lx < x + w) {
+                ctx.beginPath(); ctx.moveTo(lx, ry - 14); ctx.lineTo(lx, ry); ctx.stroke();
             }
         }
     }
 
-    // Crenellations (battlements)
-    const crenW = 14, crenH = 12, crenGap = 6;
+    // Battlements
+    const crenW = 12, crenH = 10, crenGap = 5;
     const totalCren = Math.floor((w + crenGap) / (crenW + crenGap));
-    const startX = x + (w - totalCren * (crenW + crenGap) + crenGap) / 2;
+    const sx = x + (w - totalCren * (crenW + crenGap) + crenGap) / 2;
     ctx.fillStyle = darken(c.color, dmg * 15);
     for (let i = 0; i < totalCren; i++) {
-        // Skip some crenellations based on damage
         if (dmg > i && i > 0 && i < totalCren - 1) continue;
-        ctx.fillRect(startX + i * (crenW + crenGap), y - crenH, crenW, crenH);
+        ctx.fillRect(sx + i * (crenW + crenGap), y - crenH, crenW, crenH);
     }
 
     // Door
-    const doorW = 18, doorH = 28;
-    const doorX = x + (w - doorW) / 2;
-    const doorY = y + h - doorH;
+    const dw = 16, dh = 24;
+    const dx = x + (w - dw) / 2, dy = y + h - dh;
     ctx.fillStyle = '#4a3520';
     ctx.beginPath();
-    ctx.moveTo(doorX, doorY + doorH);
-    ctx.lineTo(doorX, doorY + doorW / 2);
-    ctx.arc(doorX + doorW / 2, doorY + doorW / 2, doorW / 2, Math.PI, 0);
-    ctx.lineTo(doorX + doorW, doorY + doorH);
+    ctx.moveTo(dx, dy + dh);
+    ctx.lineTo(dx, dy + dw / 2);
+    ctx.arc(dx + dw / 2, dy + dw / 2, dw / 2, Math.PI, 0);
+    ctx.lineTo(dx + dw, dy + dh);
     ctx.fill();
 
     // Flag
     if (c.hp > 0) {
-        const flagX = x + w / 2;
-        const flagY = y - crenH;
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(flagX, flagY); ctx.lineTo(flagX, flagY - 28); ctx.stroke();
-
+        const fx = x + w / 2, fy = y - crenH;
+        ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx, fy - 24); ctx.stroke();
         ctx.fillStyle = c.color;
         ctx.beginPath();
-        ctx.moveTo(flagX, flagY - 28);
-        ctx.lineTo(flagX + 18 * PLAYERS[playerIdx].dir, flagY - 22);
-        ctx.lineTo(flagX, flagY - 16);
+        ctx.moveTo(fx, fy - 24);
+        ctx.lineTo(fx + 14, fy - 19);
+        ctx.lineTo(fx, fy - 14);
         ctx.fill();
     }
 
-    // Damage cracks
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
+    // Cracks
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
     for (let i = 0; i < dmg; i++) {
-        const cx = x + 10 + (i * 37) % (w - 20);
-        const cy = y + 15 + (i * 23) % (h - 30);
+        const cx = x + 8 + (i * 31) % (w - 16);
+        const cy = y + 12 + (i * 19) % (h - 24);
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + 8, cy + 12);
-        ctx.lineTo(cx + 2, cy + 18);
-        ctx.moveTo(cx + 8, cy + 12);
-        ctx.lineTo(cx + 16, cy + 8);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + 7, cy + 10); ctx.lineTo(cx + 1, cy + 15);
+        ctx.moveTo(cx + 7, cy + 10); ctx.lineTo(cx + 14, cy + 7);
         ctx.stroke();
     }
 
-    // Rubble pieces at base
-    ctx.fillStyle = '#888';
+    // Rubble
+    ctx.fillStyle = '#777';
     for (let i = 0; i < dmg * 2; i++) {
-        const rx = x + (i * 31) % w;
-        const ry = y + h + 2 + (i % 3) * 4;
-        const rs = 3 + (i % 4);
-        ctx.fillRect(rx, ry, rs, rs);
+        ctx.fillRect(x + (i * 27) % w, c.groundY + 1 + (i % 3) * 3, 3 + (i % 4), 3 + (i % 3));
     }
 
     // HP bar
-    const barW = 60, barH = 8;
-    const barX = x + (w - barW) / 2;
-    const barY = y - crenH - 40;
+    const bw = 54, bh = 7;
+    const bx = x + (w - bw) / 2, by = y - crenH - 36;
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
-    ctx.fillStyle = '#555';
-    ctx.fillRect(barX, barY, barW, barH);
-    const hpPct = c.hp / HITS_TO_WIN;
-    ctx.fillStyle = hpPct > 0.4 ? '#2ecc71' : hpPct > 0.2 ? '#f39c12' : '#e74c3c';
-    ctx.fillRect(barX, barY, barW * hpPct, barH);
+    ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+    ctx.fillStyle = '#444';
+    ctx.fillRect(bx, by, bw, bh);
+    const pct = c.hp / HITS_TO_WIN;
+    ctx.fillStyle = pct > 0.4 ? '#2ecc71' : pct > 0.2 ? '#f39c12' : '#e74c3c';
+    ctx.fillRect(bx, by, bw * pct, bh);
 
-    // HP text
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(c.hp + '/' + HITS_TO_WIN, x + w / 2, barY - 4);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(c.hp + '/' + HITS_TO_WIN, x + w / 2, by - 3);
+
+    // Name
+    ctx.fillStyle = c.color; ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(players[idx].name, x + w / 2, by - 16);
+
+    // Highlight current player
+    if (idx === currentPlayer && canFire && !gameOver) {
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(x - 4, y - crenH - 4, w + 8, h + crenH + 8);
+        ctx.setLineDash([]);
+    }
 }
 
-function drawCannon(playerIdx) {
-    const p = PLAYERS[playerIdx];
-    const c = castles[playerIdx];
+function drawCannon(idx) {
+    const c = castles[idx];
+    if (!c.alive) return;
     const cx = c.x + c.w / 2;
-    const cy = c.y + 20;
+    const cy = c.y + 16;
 
-    const angle = getAngle();
-    const rad = (playerIdx === 0 ? -angle : -(180 - angle)) * Math.PI / 180;
-    const len = 28;
+    // Only draw aim visuals for current player
+    const isActive = idx === currentPlayer && canFire && !gameOver;
+    const angle = isActive ? getAngle() : 45;
+    const dir = isActive ? aimDir : (c.x < W / 2 ? 1 : -1);
+    const rad = -angle * Math.PI / 180;
+    const len = 24;
 
-    // Cannon base
+    // Barrel direction
+    const bx = Math.cos(rad) * dir;
+    const by = Math.sin(rad);
+
     ctx.fillStyle = '#444';
-    ctx.beginPath();
-    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2); ctx.fill();
 
-    // Cannon barrel
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(rad);
+    ctx.rotate(Math.atan2(by, bx));
     ctx.fillStyle = '#333';
-    ctx.fillRect(0, -4, len, 8);
+    ctx.fillRect(0, -3.5, len, 7);
     ctx.fillStyle = '#555';
-    ctx.fillRect(len - 4, -5, 6, 10);
+    ctx.fillRect(len - 4, -4.5, 5, 9);
     ctx.restore();
 
-    // Angle indicator (only for current player)
-    if (playerIdx === currentPlayer && canFire && !gameOver) {
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.strokeStyle = 'rgba(255,215,0,0.4)';
-        ctx.setLineDash([4, 4]);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(0, 0, 40, rad - 0.1, rad + 0.1);
-        ctx.stroke();
-        // Dotted trajectory preview
+    // Trajectory preview
+    if (isActive) {
         const power = getPower() * 0.35;
-        const vx = Math.cos(rad) * power;
-        const vy = Math.sin(rad) * power;
-        ctx.restore();
-
+        const vx = bx * power;
+        const vy = by * power;
         ctx.fillStyle = 'rgba(255,215,0,0.3)';
-        for (let t = 0; t < 50; t++) {
+        for (let t = 0; t < 60; t++) {
             const px = cx + vx * t * 3;
             const py = cy + vy * t * 3 + 0.5 * GRAVITY * (t * 3) * (t * 3);
-            if (py > GROUND_Y || px < 0 || px > W) break;
-            ctx.beginPath();
-            ctx.arc(px, py, 2, 0, Math.PI * 2);
-            ctx.fill();
+            if (py > terrainAt(px) || px < -10 || px > W + 10) break;
+            ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
         }
     }
 }
 
 function drawProjectile() {
     if (!projectile) return;
-
-    // Trail
     ctx.fillStyle = 'rgba(255,150,0,0.6)';
-    trailParticles.forEach(tp => {
-        ctx.beginPath();
-        ctx.arc(tp.x, tp.y, tp.r * tp.life, 0, Math.PI * 2);
-        ctx.fill();
+    trail.forEach(tp => {
+        ctx.beginPath(); ctx.arc(tp.x, tp.y, tp.r * tp.life, 0, Math.PI * 2); ctx.fill();
     });
-
-    // Cannonball
     ctx.fillStyle = '#222';
-    ctx.beginPath();
-    ctx.arc(projectile.x, projectile.y, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(projectile.x, projectile.y, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ff6600';
-    ctx.beginPath();
-    ctx.arc(projectile.x - 1, projectile.y - 1, 2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(projectile.x - 1, projectile.y - 1, 2, 0, Math.PI * 2); ctx.fill();
 }
 
 function drawParticles() {
     particles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
         ctx.fillRect(p.x, p.y, p.size, p.size);
     });
     ctx.globalAlpha = 1;
 }
 
-function drawUI() {
-    // Player names above castles
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    PLAYERS.forEach((p, i) => {
-        ctx.fillStyle = p.color;
-        ctx.fillText(p.name, castles[i].x + castles[i].w / 2, castles[i].y - 52 - 14);
-    });
-}
-
 function draw() {
     ctx.clearRect(0, 0, W, H);
     drawSky();
-    drawGround();
+    drawTerrain();
     castles.forEach((c, i) => drawCastle(c, i));
-    PLAYERS.forEach((_, i) => drawCannon(i));
+    castles.forEach((_, i) => drawCannon(i));
     drawProjectile();
     drawParticles();
-    drawUI();
 }
+
+/* ═══════════════════════════════════════
+   CONTROLS
+   ═══════════════════════════════════════ */
 
 function getAngle() { return parseInt(document.getElementById('angle').value); }
 function getPower() { return parseInt(document.getElementById('power').value); }
+
+function toggleDir() {
+    aimDir *= -1;
+    updateAimDir();
+    draw();
+}
+
+function updateAimDir() {
+    document.getElementById('dir-btn').textContent = aimDir === -1 ? '← Lewo' : 'Prawo →';
+}
+
+function setDefaultDir() {
+    // Aim toward center by default
+    const c = castles[currentPlayer];
+    aimDir = (c.x + c.w / 2 < W / 2) ? 1 : -1;
+    updateAimDir();
+}
+
+/* ═══════════════════════════════════════
+   FIRE & PHYSICS
+   ═══════════════════════════════════════ */
 
 function fire() {
     if (!canFire || gameOver) return;
     canFire = false;
     document.getElementById('fire-btn').disabled = true;
 
-    const p = PLAYERS[currentPlayer];
     const c = castles[currentPlayer];
     const cx = c.x + c.w / 2;
-    const cy = c.y + 20;
+    const cy = c.y + 16;
     const angle = getAngle();
     const power = getPower() * 0.35;
-    const rad = (currentPlayer === 0 ? -angle : -(180 - angle)) * Math.PI / 180;
+    const rad = -angle * Math.PI / 180;
+    const bx = Math.cos(rad) * aimDir;
+    const by = Math.sin(rad);
 
     projectile = {
-        x: cx + Math.cos(rad) * 30,
-        y: cy + Math.sin(rad) * 30,
-        vx: Math.cos(rad) * power,
-        vy: Math.sin(rad) * power
+        x: cx + bx * 30,
+        y: cy + by * 30,
+        vx: bx * power,
+        vy: by * power
     };
-    trailParticles = [];
+    trail = [];
 
     requestAnimationFrame(updateProjectile);
 }
@@ -410,39 +580,40 @@ function updateProjectile() {
     projectile.x += projectile.vx;
     projectile.y += projectile.vy;
 
-    // Trail
-    trailParticles.push({
-        x: projectile.x, y: projectile.y,
-        r: 3 + Math.random() * 2, life: 1
-    });
-    trailParticles = trailParticles.filter(tp => {
-        tp.life -= 0.05;
-        return tp.life > 0;
-    });
+    trail.push({ x: projectile.x, y: projectile.y, r: 3 + Math.random() * 2, life: 1 });
+    trail = trail.filter(tp => { tp.life -= 0.05; return tp.life > 0; });
 
-    // Check hit on opponent castle
-    const opIdx = 1 - currentPlayer;
-    const oc = castles[opIdx];
-    if (projectile.x > oc.x && projectile.x < oc.x + oc.w &&
-        projectile.y > oc.y && projectile.y < oc.y + oc.h) {
-        // Hit!
-        oc.hp--;
-        spawnExplosion(projectile.x, projectile.y, PLAYERS[currentPlayer].color);
-        projectile = null;
+    // Hit check on all enemy castles
+    for (let i = 0; i < castles.length; i++) {
+        if (i === currentPlayer || !castles[i].alive) continue;
+        const oc = castles[i];
+        if (projectile.x > oc.x && projectile.x < oc.x + oc.w &&
+            projectile.y > oc.y && projectile.y < oc.y + oc.h) {
+            oc.hp--;
+            spawnExplosion(projectile.x, projectile.y, players[currentPlayer].color);
+            projectile = null;
 
-        if (oc.hp <= 0) {
-            endGame(currentPlayer);
-        } else {
-            setTimeout(nextTurn, 800);
+            if (oc.hp <= 0) {
+                oc.alive = false;
+                alivePlayers = alivePlayers.filter(p => p !== i);
+                spawnExplosion(oc.x + oc.w / 2, oc.y + oc.h / 2, oc.color);
+            }
+
+            if (alivePlayers.length <= 1) {
+                setTimeout(() => endGame(alivePlayers[0]), 500);
+            } else {
+                setTimeout(nextTurn, 800);
+            }
+            draw();
+            return;
         }
-        draw();
-        return;
     }
 
-    // Check out of bounds or ground hit
-    if (projectile.y > GROUND_Y || projectile.x < -20 || projectile.x > W + 20) {
-        if (projectile.y > GROUND_Y - 5) {
-            spawnExplosion(projectile.x, GROUND_Y - 3, '#8B7355');
+    // Ground / out of bounds
+    const groundHere = terrainAt(projectile.x);
+    if (projectile.y > groundHere || projectile.x < -30 || projectile.x > W + 30) {
+        if (projectile.y >= groundHere - 5 && projectile.x > 0 && projectile.x < W) {
+            spawnExplosion(projectile.x, groundHere - 3, '#8B7355');
         }
         projectile = null;
         setTimeout(nextTurn, 600);
@@ -454,8 +625,12 @@ function updateProjectile() {
     requestAnimationFrame(updateProjectile);
 }
 
+/* ═══════════════════════════════════════
+   EFFECTS
+   ═══════════════════════════════════════ */
+
 function spawnExplosion(x, y, color) {
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 28; i++) {
         particles.push({
             x, y,
             vx: (Math.random() - 0.5) * 6,
@@ -470,27 +645,42 @@ function spawnExplosion(x, y, color) {
 
 function animateParticles() {
     if (particles.length === 0) return;
-    particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.1;
-        p.life -= 0.03;
-    });
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= 0.03; });
     particles = particles.filter(p => p.life > 0);
     draw();
     if (particles.length > 0) requestAnimationFrame(animateParticles);
 }
 
+/* ═══════════════════════════════════════
+   TURNS & END
+   ═══════════════════════════════════════ */
+
 function nextTurn() {
-    currentPlayer = 1 - currentPlayer;
+    // Rotate to next alive player
+    let next = currentPlayer;
+    do {
+        next = (next + 1) % playerCount;
+    } while (!castles[next].alive);
+    currentPlayer = next;
+
     randomWind();
+    setDefaultDir();
     updateTurnUI();
     canFire = true;
     document.getElementById('fire-btn').disabled = false;
+    draw();
+}
+
+function randomWind() {
+    wind = (Math.random() - 0.5) * 0.08;
+    const dir = wind > 0 ? '→' : '←';
+    const s = Math.abs(wind);
+    const str = s < 0.02 ? 'Słaby' : s < 0.05 ? 'Umiarkowany' : 'Silny';
+    document.getElementById('wind-info').textContent = 'Wiatr: ' + str + ' ' + dir;
 }
 
 function updateTurnUI() {
-    const p = PLAYERS[currentPlayer];
+    const p = players[currentPlayer];
     const el = document.getElementById('turn-name');
     el.textContent = p.name;
     el.style.color = p.color;
@@ -499,49 +689,35 @@ function updateTurnUI() {
 function endGame(winnerIdx) {
     gameOver = true;
     const el = document.getElementById('turn-name');
-    el.textContent = PLAYERS[winnerIdx].name + ' wygrywa!';
-    el.style.color = PLAYERS[winnerIdx].color;
+    el.textContent = players[winnerIdx].name + ' wygrywa!';
+    el.style.color = players[winnerIdx].color;
     document.getElementById('fire-btn').disabled = true;
     document.getElementById('restart-btn').style.display = 'inline-block';
 
-    // Victory explosion
     const wc = castles[winnerIdx];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
         setTimeout(() => {
-            spawnExplosion(
-                wc.x + Math.random() * wc.w,
-                wc.y - 20 - Math.random() * 40,
-                '#ffd700'
-            );
+            spawnExplosion(wc.x + Math.random() * wc.w, wc.y - 20 - Math.random() * 40, '#ffd700');
         }, i * 200);
     }
 }
 
-function restart() {
-    gameOver = false;
-    currentPlayer = 0;
-    projectile = null;
-    particles = [];
-    trailParticles = [];
-    canFire = true;
-    initCastles();
-    randomWind();
-    updateTurnUI();
-    document.getElementById('fire-btn').disabled = false;
-    document.getElementById('restart-btn').style.display = 'none';
-    draw();
-}
+/* ═══════════════════════════════════════
+   UTILS
+   ═══════════════════════════════════════ */
 
-function darken(hex, amount) {
-    const num = parseInt(hex.slice(1), 16);
-    let r = (num >> 16) - amount;
-    let g = ((num >> 8) & 0xff) - amount;
-    let b = (num & 0xff) - amount;
-    r = Math.max(0, r); g = Math.max(0, g); b = Math.max(0, b);
+function darken(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    let r = Math.max(0, (n >> 16) - amt);
+    let g = Math.max(0, ((n >> 8) & 0xff) - amt);
+    let b = Math.max(0, (n & 0xff) - amt);
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
 }
 
-// Slider live update
+/* ═══════════════════════════════════════
+   EVENTS
+   ═══════════════════════════════════════ */
+
 document.getElementById('angle').addEventListener('input', e => {
     document.getElementById('angle-val').textContent = e.target.value + '°';
     draw();
@@ -551,34 +727,25 @@ document.getElementById('power').addEventListener('input', e => {
     draw();
 });
 
-// Keyboard: Enter to fire, arrows to adjust
 document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        fire();
+    // Setup screen: Enter starts game
+    if (document.getElementById('setup').style.display !== 'none' &&
+        document.getElementById('setup').style.display !== '' || !document.getElementById('game-ui').style.display || document.getElementById('game-ui').style.display === 'none') {
+        if (e.key === 'Enter') { startGame(); return; }
     }
-    const angleEl = document.getElementById('angle');
-    const powerEl = document.getElementById('power');
-    if (e.key === 'ArrowUp') {
-        angleEl.value = Math.min(85, parseInt(angleEl.value) + 1);
-        angleEl.dispatchEvent(new Event('input'));
-    } else if (e.key === 'ArrowDown') {
-        angleEl.value = Math.max(5, parseInt(angleEl.value) - 1);
-        angleEl.dispatchEvent(new Event('input'));
-    } else if (e.key === 'ArrowRight') {
-        powerEl.value = Math.min(100, parseInt(powerEl.value) + 2);
-        powerEl.dispatchEvent(new Event('input'));
-    } else if (e.key === 'ArrowLeft') {
-        powerEl.value = Math.max(10, parseInt(powerEl.value) - 2);
-        powerEl.dispatchEvent(new Event('input'));
-    }
+
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
+    const aEl = document.getElementById('angle');
+    const pEl = document.getElementById('power');
+    if (e.key === 'ArrowUp') { aEl.value = Math.min(85, +aEl.value + 1); aEl.dispatchEvent(new Event('input')); }
+    if (e.key === 'ArrowDown') { aEl.value = Math.max(5, +aEl.value - 1); aEl.dispatchEvent(new Event('input')); }
+    if (e.key === 'ArrowRight') { pEl.value = Math.min(100, +pEl.value + 2); pEl.dispatchEvent(new Event('input')); }
+    if (e.key === 'ArrowLeft') { pEl.value = Math.max(10, +pEl.value - 2); pEl.dispatchEvent(new Event('input')); }
+    if (e.key === 'd' || e.key === 'D') toggleDir();
 });
 
-// Init
-initCastles();
-randomWind();
-updateTurnUI();
-draw();
+// Init setup
+buildSetup();
 </script>
 </body>
 </html>
