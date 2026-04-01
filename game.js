@@ -6,7 +6,7 @@ const PLAYER_COLORS = ['#e74c3c', '#3498db', '#27ae60', '#f39c12'];
 const PLAYER_DEFAULTS = ['Gracz 1', 'Gracz 2', 'Gracz 3', 'Gracz 4'];
 const SUGGESTION_LETTERS = ['A', 'B', 'C', 'D'];
 const MAX_TIME = 90;
-const TOTAL_ROUNDS = 5;
+const TOTAL_ROUNDS = 3;
 const MAX_WRONG = 7;
 
 let playerCount = 2;
@@ -479,11 +479,6 @@ function p2GuessLetter(letter) {
         } else {
             fb.innerHTML = '❌ Nie ma litery „' + letter + '"!';
             fb.className = 'feedback wrong';
-
-            // Rotacja do następnego gracza
-            if (playerCount > 1) {
-                currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
-            }
         }
     }
 
@@ -534,9 +529,6 @@ function p2GuessWord() {
         } else {
             fb.innerHTML = '❌ To nie to słowo!';
             fb.className = 'feedback wrong';
-            if (playerCount > 1) {
-                currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
-            }
         }
     }
 
@@ -561,7 +553,7 @@ function p2NextRound() {
     currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
 
     if (playerCount > 1) {
-        showHandoff('Faza 2: Szubienica! Runda ' + (p2RoundIdx + 1), p2BeginRound);
+        showHandoff('Faza 2: Szubienica! Odgadnij słowo.', p2BeginRound);
     } else {
         p2InitRound();
     }
