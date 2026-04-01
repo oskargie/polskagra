@@ -24,7 +24,8 @@ let timerInterval = null;
 // Faza 2
 let p2Words = [];
 let p2RoundIdx = 0;
-let p2State = null; // { word, hint, revealed: Set, wrong: Set, solved: bool }
+let p2TotalRounds = 0;
+let p2State = null; // { word, category, revealed: Set, wrong: Set, solved: bool }
 
 // Jaka akcja po kliknięciu "Gotowy" na handoff
 let handoffCallback = null;
@@ -310,7 +311,8 @@ function p1Next() {
    ═══════════════════════════════════════════ */
 
 function startPhase2() {
-    p2Words = shuffle(HANGMAN_WORDS).slice(0, TOTAL_ROUNDS);
+    p2TotalRounds = 2 * playerCount;
+    p2Words = shuffle(HANGMAN_WORDS).slice(0, p2TotalRounds);
     p2RoundIdx = 0;
     currentPlayerIdx = 0;
 
@@ -332,7 +334,7 @@ function p2InitRound() {
     const wordLower = entry.word.toLowerCase();
     p2State = {
         word: wordLower,
-        hint: entry.hint,
+        category: entry.category,
         revealed: new Set(),
         wrong: new Set(),
         solved: false,
@@ -340,7 +342,8 @@ function p2InitRound() {
     };
 
     document.getElementById('p2-round').textContent = p2RoundIdx + 1;
-    document.getElementById('p2-hint').textContent = 'Podpowiedź: ' + entry.hint;
+    document.getElementById('p2-rounds-total').textContent = p2TotalRounds;
+    document.getElementById('p2-hint').textContent = 'Kategoria: ' + entry.category;
     document.getElementById('p2-feedback').className = 'feedback';
     document.getElementById('p2-next-btn').classList.add('hidden');
     document.getElementById('p2-play-area').style.display = '';
@@ -542,7 +545,7 @@ function p2EndRound() {
 
 function p2NextRound() {
     p2RoundIdx++;
-    if (p2RoundIdx >= TOTAL_ROUNDS) {
+    if (p2RoundIdx >= p2TotalRounds) {
         showEndScreen();
         return;
     }
