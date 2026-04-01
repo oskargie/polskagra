@@ -136,6 +136,56 @@
         <div class="scoreboard" id="p2-scoreboard"></div>
     </div>
 
+    <!-- ═══ EKRAN PRZEJŚCIA DO FAZY 3 ═══ -->
+    <div id="transition2-screen" class="screen">
+        <div class="phase-icon">🇬🇧➡🇵🇱</div>
+        <div class="phase-title">Faza 3: Tłumaczenie!</div>
+        <div class="phase-desc">
+            Przetłumacz angielskie słowo na polski.<br>
+            Każdy gracz ma 3 słowa do przetłumaczenia.<br>
+            Brak podpowiedzi — musisz znać tłumaczenie!
+        </div>
+        <button class="btn-primary" onclick="startPhase3()">Zaczynamy!</button>
+    </div>
+
+    <!-- ═══ FAZA 3: TŁUMACZENIE ═══ -->
+    <div id="phase3-screen" class="screen">
+        <div class="player-banner" id="p3-banner"></div>
+
+        <div class="hangman-info">
+            <div class="status-pill">Słowo: <strong id="p3-round">1</strong> / <strong id="p3-rounds-total">3</strong></div>
+            <div class="status-pill">Wynik: <strong id="p3-score">0</strong> pkt</div>
+        </div>
+
+        <div class="sentence-box">
+            <p class="p3-english-label">Przetłumacz na polski:</p>
+            <p id="p3-english-word" class="p3-english-word"></p>
+        </div>
+
+        <div class="feedback" id="p3-feedback"></div>
+
+        <div id="p3-input-section">
+            <div class="input-area">
+                <input type="text" id="p3-answer" placeholder="Wpisz tłumaczenie…" autocomplete="off">
+                <button id="p3-check-btn" onclick="p3CheckAnswer()">Sprawdź</button>
+            </div>
+            <div class="polish-keys">
+                <button onclick="insertCharTo('p3-answer','ą')">ą</button>
+                <button onclick="insertCharTo('p3-answer','ć')">ć</button>
+                <button onclick="insertCharTo('p3-answer','ę')">ę</button>
+                <button onclick="insertCharTo('p3-answer','ł')">ł</button>
+                <button onclick="insertCharTo('p3-answer','ń')">ń</button>
+                <button onclick="insertCharTo('p3-answer','ó')">ó</button>
+                <button onclick="insertCharTo('p3-answer','ś')">ś</button>
+                <button onclick="insertCharTo('p3-answer','ź')">ź</button>
+                <button onclick="insertCharTo('p3-answer','ż')">ż</button>
+            </div>
+        </div>
+
+        <button class="next-btn hidden" id="p3-next-btn" onclick="p3Next()">Dalej ▶</button>
+        <div class="scoreboard" id="p3-scoreboard"></div>
+    </div>
+
     <!-- ═══ EKRAN KOŃCOWY ═══ -->
     <div id="end-screen" class="screen">
         <h2>Koniec gry!</h2>

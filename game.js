@@ -27,6 +27,15 @@ let p2RoundIdx = 0;
 let p2TotalRounds = 0;
 let p2State = null; // { word, category, revealed: Set, wrong: Set, solved: bool }
 
+// Faza 3
+const P3_TURNS_PER_PLAYER = 3;
+const P3_POINTS_EXACT = 7;
+const P3_POINTS_NORMALIZED = 5;
+let p3Words = [];
+let p3Index = 0;
+let p3Round = 0;
+let p3Answered = false;
+
 // Jaka akcja po kliknięciu "Gotowy" na handoff
 let handoffCallback = null;
 
@@ -546,7 +555,7 @@ function p2EndRound() {
 function p2NextRound() {
     p2RoundIdx++;
     if (p2RoundIdx >= p2TotalRounds) {
-        showEndScreen();
+        showScreen('transition2-screen');
         return;
     }
     currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
@@ -555,6 +564,112 @@ function p2NextRound() {
         showHandoff('Faza 2: Szubienica! Runda ' + (p2RoundIdx + 1), p2BeginRound);
     } else {
         p2InitRound();
+    }
+}
+
+/* ═══════════════════════════════════════════
+   FAZA 3 — tłumaczenie z angielskiego
+   ═══════════════════════════════════════════ */
+
+function startPhase3() {
+    const totalWords = P3_TURNS_PER_PLAYER * playerCount;
+    p3Words = shuffle(TRANSLATION_WORDS).slice(0, totalWords);
+    p3Index = 0;
+    p3Round = 1;
+    currentPlayerIdx = 0;
+
+    document.getElementById('p3-rounds-total').textContent = P3_TURNS_PER_PLAYER;
+
+    if (playerCount === 1) {
+        showScreen('phase3-screen');
+        p3ShowQuestion();
+    } else {
+        showHandoff('Faza 3: Przetłumacz słowo na polski!', p3BeginTurn);
+    }
+}
+
+function p3BeginTurn() {
+    showScreen('phase3-screen');
+    p3ShowQuestion();
+}
+
+function p3ShowQuestion() {
+    const entry = p3Words[p3Index];
+    document.getElementById('p3-english-word').textContent = entry.en;
+    document.getElementById('p3-round').textContent = p3Round;
+
+    const p = players[currentPlayerIdx];
+    setBanner('p3-banner', p);
+    document.getElementById('p3-score').textContent = p.score;
+
+    const input = document.getElementById('p3-answer');
+    input.value = '';
+    input.disabled = false;
+    input.className = '';
+    document.getElementById('p3-check-btn').disabled = false;
+    document.getElementById('p3-feedback').className = 'feedback';
+    document.getElementById('p3-next-btn').classList.add('hidden');
+
+    renderScoreboard('p3-scoreboard');
+    p3Answered = false;
+    input.focus();
+}
+
+function p3CheckAnswer() {
+    if (p3Answered) return;
+    const input = document.getElementById('p3-answer');
+    const val = input.value.trim();
+    if (val === '') return;
+
+    p3Answered = true;
+    const entry = p3Words[p3Index];
+    const fb = document.getElementById('p3-feedback');
+    const p = players[currentPlayerIdx];
+
+    // Sprawdź dokładne dopasowanie (z polskimi znakami)
+    const exactMatch = entry.pl.some(ans => val.toLowerCase() === ans.toLowerCase());
+    // Sprawdź dopasowanie znormalizowane (bez polskich znaków)
+    const normalizedMatch = entry.pl.some(ans => normalize(val) === normalize(ans));
+
+    if (exactMatch) {
+        p.score += P3_POINTS_EXACT;
+        document.getElementById('p3-score').textContent = p.score;
+        input.className = 'correct';
+        fb.innerHTML = '✅ Brawo! +' + P3_POINTS_EXACT + ' pkt!';
+        fb.className = 'feedback correct';
+    } else if (normalizedMatch) {
+        p.score += P3_POINTS_NORMALIZED;
+        document.getElementById('p3-score').textContent = p.score;
+        input.className = 'correct';
+        fb.innerHTML = '✅ Dobrze! +' + P3_POINTS_NORMALIZED + ' pkt — ale pamiętaj o polskich znakach: <strong>' + entry.pl[0] + '</strong>';
+        fb.className = 'feedback correct';
+    } else {
+        input.className = 'wrong';
+        fb.innerHTML = '❌ Niestety! Poprawna odpowiedź: <strong>' + entry.pl[0] + '</strong>';
+        fb.className = 'feedback wrong';
+    }
+
+    input.disabled = true;
+    document.getElementById('p3-check-btn').disabled = true;
+    renderScoreboard('p3-scoreboard');
+    document.getElementById('p3-next-btn').classList.remove('hidden');
+    document.getElementById('p3-next-btn').focus();
+}
+
+function p3Next() {
+    p3Index++;
+    if (p3Index >= p3Words.length) {
+        showEndScreen();
+        return;
+    }
+
+    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+    if (currentPlayerIdx === 0) p3Round++;
+
+    if (playerCount > 1) {
+        showHandoff('Faza 3: Przetłumacz słowo na polski!', p3BeginTurn);
+    } else {
+        p3ShowQuestion();
     }
 }
 
@@ -607,6 +722,11 @@ document.addEventListener('keydown', e => {
         if (p2State && (p2State.solved || p2State.failed)) {
             p2NextRound();
         }
+    } else if (active.id === 'transition2-screen') {
+        startPhase3();
+    } else if (active.id === 'phase3-screen') {
+        if (!p3Answered) p3CheckAnswer();
+        else p3Next();
     }
 });
 
