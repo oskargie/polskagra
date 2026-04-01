@@ -473,20 +473,6 @@ function drawCannon(idx) {
     ctx.fillStyle = '#555';
     ctx.fillRect(len - 4, -4.5, 5, 9);
     ctx.restore();
-
-    // Trajectory preview
-    if (isActive) {
-        const power = getPower() * 0.35;
-        const vx = bx * power;
-        const vy = by * power;
-        ctx.fillStyle = 'rgba(255,215,0,0.3)';
-        for (let t = 0; t < 30; t++) {
-            const px = cx + vx * t * 3;
-            const py = cy + vy * t * 3 + 0.5 * GRAVITY * (t * 3) * (t * 3);
-            if (py > terrainAt(px) || px < -10 || px > W + 10) break;
-            ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
-        }
-    }
 }
 
 function drawProjectile() {
