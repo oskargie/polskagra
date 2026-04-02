@@ -813,7 +813,7 @@ function showTransition3() {
 
 const C_GRAVITY = 0.15;
 const C_HITS_TO_WIN = 5;
-const C_CW = 60, C_CH = 70;
+const C_CW = 36, C_CH = 42;
 
 let cCanvas, cCtx, cW, cH;
 let cTerrain = [];
@@ -984,77 +984,69 @@ function cDrawTerrain() {
 function cDrawCastle(c, idx) {
     if (!c.alive) return;
     const dmg = C_HITS_TO_WIN - c.hp;
-    const x = c.x, y = c.y, w = c.w, h = c.h;
+    const cx = c.x + c.w / 2;
+    const baseY = c.groundY;
+    const col = cDarken(c.color, dmg * 10);
 
-    cCtx.fillStyle = cDarken(c.color, dmg * 15);
-    cCtx.fillRect(x, y, w, h);
-
-    cCtx.strokeStyle = 'rgba(0,0,0,0.2)'; cCtx.lineWidth = 1;
-    for (let row = 0; row < 4; row++) {
-        const ry = y + 10 + row * 15;
-        cCtx.beginPath(); cCtx.moveTo(x, ry); cCtx.lineTo(x + w, ry); cCtx.stroke();
-    }
-
-    // Battlements
-    const crenW = 10, crenH = 9, crenGap = 5;
-    const totalCren = Math.floor((w + crenGap) / (crenW + crenGap));
-    const sx = x + (w - totalCren * (crenW + crenGap) + crenGap) / 2;
-    cCtx.fillStyle = cDarken(c.color, dmg * 15);
-    for (let i = 0; i < totalCren; i++) {
-        if (dmg > i && i > 0 && i < totalCren - 1) continue;
-        cCtx.fillRect(sx + i * (crenW + crenGap), y - crenH, crenW, crenH);
-    }
-
-    // Door
-    const dw = 14, dh = 22;
-    const dx = x + (w - dw) / 2, dy = y + h - dh;
-    cCtx.fillStyle = '#4a3520';
+    // Legs
+    cCtx.strokeStyle = col; cCtx.lineWidth = 3;
     cCtx.beginPath();
-    cCtx.moveTo(dx, dy + dh); cCtx.lineTo(dx, dy + dw / 2);
-    cCtx.arc(dx + dw / 2, dy + dw / 2, dw / 2, Math.PI, 0);
-    cCtx.lineTo(dx + dw, dy + dh); cCtx.fill();
+    cCtx.moveTo(cx - 6, baseY); cCtx.lineTo(cx - 2, baseY - 16);
+    cCtx.moveTo(cx + 6, baseY); cCtx.lineTo(cx + 2, baseY - 16);
+    cCtx.stroke();
 
-    // Flag
-    if (c.hp > 0) {
-        const fx = x + w / 2, fy = y - crenH;
-        cCtx.strokeStyle = '#555'; cCtx.lineWidth = 2;
-        cCtx.beginPath(); cCtx.moveTo(fx, fy); cCtx.lineTo(fx, fy - 22); cCtx.stroke();
-        cCtx.fillStyle = c.color;
-        cCtx.beginPath();
-        cCtx.moveTo(fx, fy - 22); cCtx.lineTo(fx + 13, fy - 17); cCtx.lineTo(fx, fy - 12); cCtx.fill();
-    }
+    // Body (torso)
+    cCtx.fillStyle = col;
+    cCtx.fillRect(cx - 7, baseY - 32, 14, 16);
 
-    // Cracks
-    cCtx.strokeStyle = '#333'; cCtx.lineWidth = 2;
+    // Arms
+    cCtx.strokeStyle = col; cCtx.lineWidth = 2.5;
+    cCtx.beginPath();
+    cCtx.moveTo(cx - 7, baseY - 28); cCtx.lineTo(cx - 14, baseY - 22);
+    cCtx.moveTo(cx + 7, baseY - 28); cCtx.lineTo(cx + 14, baseY - 22);
+    cCtx.stroke();
+
+    // Head
+    cCtx.fillStyle = '#f5cfa0';
+    cCtx.beginPath(); cCtx.arc(cx, baseY - 37, 6, 0, Math.PI * 2); cCtx.fill();
+
+    // Hat/helmet
+    cCtx.fillStyle = col;
+    cCtx.beginPath();
+    cCtx.moveTo(cx - 7, baseY - 37); cCtx.lineTo(cx, baseY - 47); cCtx.lineTo(cx + 7, baseY - 37);
+    cCtx.fill();
+
+    // Damage indicators (X marks on body)
+    cCtx.strokeStyle = '#ff0000'; cCtx.lineWidth = 1.5;
     for (let i = 0; i < dmg; i++) {
-        const cx = x + 8 + (i * 27) % (w - 14);
-        const cy = y + 10 + (i * 17) % (h - 20);
+        const dx = cx - 4 + (i % 3) * 4;
+        const dy = baseY - 30 + Math.floor(i / 3) * 5;
         cCtx.beginPath();
-        cCtx.moveTo(cx, cy); cCtx.lineTo(cx + 6, cy + 9); cCtx.lineTo(cx + 1, cy + 13);
-        cCtx.moveTo(cx + 6, cy + 9); cCtx.lineTo(cx + 12, cy + 6);
+        cCtx.moveTo(dx - 2, dy - 2); cCtx.lineTo(dx + 2, dy + 2);
+        cCtx.moveTo(dx + 2, dy - 2); cCtx.lineTo(dx - 2, dy + 2);
         cCtx.stroke();
     }
 
     // HP bar
-    const bw = 48, bh = 6;
-    const bx = x + (w - bw) / 2, by = y - crenH - 32;
+    const bw = 36, bh = 5;
+    const bx = cx - bw / 2, by = baseY - 56;
     cCtx.fillStyle = 'rgba(0,0,0,0.5)'; cCtx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
     cCtx.fillStyle = '#444'; cCtx.fillRect(bx, by, bw, bh);
     const pct = c.hp / C_HITS_TO_WIN;
     cCtx.fillStyle = pct > 0.4 ? '#2ecc71' : pct > 0.2 ? '#f39c12' : '#e74c3c';
     cCtx.fillRect(bx, by, bw * pct, bh);
 
-    cCtx.fillStyle = '#fff'; cCtx.font = 'bold 10px sans-serif'; cCtx.textAlign = 'center';
-    cCtx.fillText(c.hp + '/' + C_HITS_TO_WIN, x + w / 2, by - 3);
+    cCtx.fillStyle = '#fff'; cCtx.font = 'bold 9px sans-serif'; cCtx.textAlign = 'center';
+    cCtx.fillText(c.hp + '/' + C_HITS_TO_WIN, cx, by - 2);
 
     // Name
-    cCtx.fillStyle = c.color; cCtx.font = 'bold 12px sans-serif';
-    cCtx.fillText(players[idx].name, x + w / 2, by - 14);
+    cCtx.fillStyle = c.color; cCtx.font = 'bold 11px sans-serif';
+    cCtx.fillText(players[idx].name, cx, by - 13);
 
     // Highlight current
     if (idx === currentPlayerIdx && cCanFire && !cGameOver) {
-        cCtx.strokeStyle = '#ffd700'; cCtx.lineWidth = 2; cCtx.setLineDash([4, 4]);
-        cCtx.strokeRect(x - 3, y - crenH - 3, w + 6, h + crenH + 6);
+        cCtx.strokeStyle = '#ffd700'; cCtx.lineWidth = 1.5; cCtx.setLineDash([3, 3]);
+        cCtx.strokeRect(cx - 16, baseY - 50, 32, 52);
         cCtx.setLineDash([]);
     }
 }
@@ -1062,33 +1054,70 @@ function cDrawCastle(c, idx) {
 function cDrawCannon(idx) {
     const c = cCastles[idx];
     if (!c.alive) return;
-    const cx = c.x + c.w / 2, cy = c.y + 14;
+    const cx = c.x + c.w / 2;
+    const cy = c.groundY - 28; // hand height
     const isActive = idx === currentPlayerIdx && cCanFire && !cGameOver;
     const angle = isActive ? parseInt(document.getElementById('castle-angle').value) : 45;
     const dir = isActive ? cAimDir : (c.x < cW / 2 ? 1 : -1);
     const rad = -angle * Math.PI / 180;
     const bx = Math.cos(rad) * dir, by = Math.sin(rad);
+    const aimAngle = Math.atan2(by, bx);
 
-    cCtx.fillStyle = '#444';
-    cCtx.beginPath(); cCtx.arc(cx, cy, 7, 0, Math.PI * 2); cCtx.fill();
+    // Bow
+    cCtx.save();
+    cCtx.translate(cx, cy);
+    cCtx.rotate(aimAngle);
 
-    cCtx.save(); cCtx.translate(cx, cy);
-    cCtx.rotate(Math.atan2(by, bx));
-    cCtx.fillStyle = '#333'; cCtx.fillRect(0, -3, 20, 6);
-    cCtx.fillStyle = '#555'; cCtx.fillRect(17, -4, 4, 8);
+    // Bow arc
+    cCtx.strokeStyle = '#8B4513'; cCtx.lineWidth = 2.5;
+    cCtx.beginPath();
+    cCtx.arc(0, 0, 14, -1.2, 1.2);
+    cCtx.stroke();
+
+    // Bowstring
+    cCtx.strokeStyle = '#ccc'; cCtx.lineWidth = 1;
+    cCtx.beginPath();
+    cCtx.moveTo(14 * Math.cos(-1.2), 14 * Math.sin(-1.2));
+    cCtx.lineTo(0, 0);
+    cCtx.lineTo(14 * Math.cos(1.2), 14 * Math.sin(1.2));
+    cCtx.stroke();
+
+    // Arrow
+    cCtx.strokeStyle = '#654321'; cCtx.lineWidth = 1.5;
+    cCtx.beginPath(); cCtx.moveTo(-4, 0); cCtx.lineTo(20, 0); cCtx.stroke();
+    // Arrowhead
+    cCtx.fillStyle = '#888';
+    cCtx.beginPath();
+    cCtx.moveTo(20, 0); cCtx.lineTo(16, -3); cCtx.lineTo(16, 3);
+    cCtx.fill();
+
     cCtx.restore();
 }
 
 function cDrawProjectile() {
     if (!cProjectile) return;
-    cCtx.fillStyle = 'rgba(255,150,0,0.6)';
+    // Trail — faint dots
+    cCtx.fillStyle = 'rgba(180,140,80,0.4)';
     cTrail.forEach(tp => {
-        cCtx.beginPath(); cCtx.arc(tp.x, tp.y, tp.r * tp.life, 0, Math.PI * 2); cCtx.fill();
+        cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 1.5 * tp.life, 0, Math.PI * 2); cCtx.fill();
     });
-    cCtx.fillStyle = '#222';
-    cCtx.beginPath(); cCtx.arc(cProjectile.x, cProjectile.y, 4, 0, Math.PI * 2); cCtx.fill();
-    cCtx.fillStyle = '#ff6600';
-    cCtx.beginPath(); cCtx.arc(cProjectile.x - 1, cProjectile.y - 1, 1.5, 0, Math.PI * 2); cCtx.fill();
+    // Arrow in flight — draw rotated arrow along velocity
+    const vx = cProjectile.vx, vy = cProjectile.vy;
+    const fAngle = Math.atan2(vy, vx);
+    cCtx.save();
+    cCtx.translate(cProjectile.x, cProjectile.y);
+    cCtx.rotate(fAngle);
+    // Shaft
+    cCtx.strokeStyle = '#654321'; cCtx.lineWidth = 1.5;
+    cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(8, 0); cCtx.stroke();
+    // Head
+    cCtx.fillStyle = '#888';
+    cCtx.beginPath(); cCtx.moveTo(8, 0); cCtx.lineTo(5, -2.5); cCtx.lineTo(5, 2.5); cCtx.fill();
+    // Fletching
+    cCtx.fillStyle = '#cc4444';
+    cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(-7, -3); cCtx.lineTo(-7, 0); cCtx.fill();
+    cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(-7, 3); cCtx.lineTo(-7, 0); cCtx.fill();
+    cCtx.restore();
 }
 
 function cDrawParticles() {
@@ -1152,7 +1181,7 @@ function castleFire() {
     document.getElementById('castle-shots-left').textContent = p.shots;
 
     const c = cCastles[currentPlayerIdx];
-    const cx = c.x + c.w / 2, cy = c.y + 14;
+    const cx = c.x + c.w / 2, cy = c.groundY - 28;
     const angle = parseInt(document.getElementById('castle-angle').value);
     const power = parseInt(document.getElementById('castle-power').value) * 0.3;
     const rad = -angle * Math.PI / 180;
