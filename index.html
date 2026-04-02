@@ -186,10 +186,43 @@
         <div class="scoreboard" id="p3-scoreboard"></div>
     </div>
 
-    <!-- ═══ EKRAN PRZEJŚCIA DO FAZY 4 ═══ -->
+    <!-- ═══ EKRAN PRZEJŚCIA DO QUIZU O POLSCE ═══ -->
+    <div id="transition-quiz-screen" class="screen">
+        <div class="phase-icon">🇵🇱</div>
+        <div class="phase-title">Faza 4: Wiedza o Polsce!</div>
+        <div class="phase-desc">
+            Sprawdź swoją wiedzę o Polsce!<br>
+            Każdy gracz odpowiada na 2 pytania.<br>
+            Wybierz poprawną odpowiedź z czterech możliwości.
+        </div>
+        <button class="btn-primary" onclick="startQuiz()">Zaczynamy!</button>
+    </div>
+
+    <!-- ═══ FAZA 4: QUIZ O POLSCE ═══ -->
+    <div id="quiz-screen" class="screen">
+        <div class="player-banner" id="pq-banner"></div>
+
+        <div class="hangman-info">
+            <div class="status-pill">Pytanie: <strong id="pq-round">1</strong> / <strong id="pq-rounds-total">2</strong></div>
+            <div class="status-pill">Wynik: <strong id="pq-score">0</strong> pkt</div>
+        </div>
+
+        <div class="sentence-box">
+            <p id="pq-question" class="pq-question"></p>
+        </div>
+
+        <div class="quiz-options" id="pq-options"></div>
+
+        <div class="feedback" id="pq-feedback"></div>
+
+        <button class="next-btn hidden" id="pq-next-btn" onclick="pqNext()">Dalej ▶</button>
+        <div class="scoreboard" id="pq-scoreboard"></div>
+    </div>
+
+    <!-- ═══ EKRAN PRZEJŚCIA DO FAZY 5 ═══ -->
     <div id="transition3-screen" class="screen">
         <div class="phase-icon">🏰</div>
-        <div class="phase-title">Faza 4: Oblężenie Zamków!</div>
+        <div class="phase-title">Faza 5: Oblężenie Zamków!</div>
         <div class="phase-desc">
             Czas na bitwę! Za każde 10 punktów ze słówek<br>
             otrzymujesz 1 strzał z armaty.<br>

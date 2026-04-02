@@ -36,6 +36,14 @@ let p3Index = 0;
 let p3Round = 0;
 let p3Answered = false;
 
+// Faza 4: Quiz o Polsce
+const PQ_TURNS_PER_PLAYER = 2;
+const PQ_POINTS = 5;
+let pqQuestions = [];
+let pqIndex = 0;
+let pqRound = 0;
+let pqAnswered = false;
+
 // Jaka akcja po kliknięciu "Gotowy" na handoff
 let handoffCallback = null;
 
@@ -651,7 +659,7 @@ function p3CheckAnswer() {
 function p3Next() {
     p3Index++;
     if (p3Index >= p3Words.length) {
-        showTransition3();
+        showScreen('transition-quiz-screen');
         return;
     }
 
@@ -666,7 +674,111 @@ function p3Next() {
 }
 
 /* ═══════════════════════════════════════════
-   PRZEJŚCIE DO FAZY 4
+   FAZA 4 — quiz o Polsce
+   ═══════════════════════════════════════════ */
+
+function startQuiz() {
+    const total = PQ_TURNS_PER_PLAYER * playerCount;
+    pqQuestions = shuffle(POLAND_QUIZ).slice(0, total);
+    pqIndex = 0;
+    pqRound = 1;
+    currentPlayerIdx = 0;
+
+    document.getElementById('pq-rounds-total').textContent = PQ_TURNS_PER_PLAYER;
+
+    if (playerCount === 1) {
+        showScreen('quiz-screen');
+        pqShowQuestion();
+    } else {
+        showHandoff('Faza 4: Wiedza o Polsce!', pqBeginTurn);
+    }
+}
+
+function pqBeginTurn() {
+    showScreen('quiz-screen');
+    pqShowQuestion();
+}
+
+function pqShowQuestion() {
+    const q = pqQuestions[pqIndex];
+    document.getElementById('pq-question').textContent = q.question;
+    document.getElementById('pq-round').textContent = pqRound;
+
+    const p = players[currentPlayerIdx];
+    setBanner('pq-banner', p);
+    document.getElementById('pq-score').textContent = p.score;
+
+    document.getElementById('pq-feedback').className = 'feedback';
+    document.getElementById('pq-next-btn').classList.add('hidden');
+
+    // Render options
+    const letters = ['A', 'B', 'C', 'D'];
+    const container = document.getElementById('pq-options');
+    container.innerHTML = '';
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt}`;
+        btn.onclick = () => pqAnswer(i);
+        container.appendChild(btn);
+    });
+
+    renderScoreboard('pq-scoreboard');
+    pqAnswered = false;
+}
+
+function pqAnswer(chosen) {
+    if (pqAnswered) return;
+    pqAnswered = true;
+
+    const q = pqQuestions[pqIndex];
+    const fb = document.getElementById('pq-feedback');
+    const p = players[currentPlayerIdx];
+    const btns = document.querySelectorAll('#pq-options .quiz-option-btn');
+
+    // Disable all buttons
+    btns.forEach(b => b.disabled = true);
+
+    // Highlight correct and wrong
+    btns[q.correct].classList.add('correct');
+    if (chosen !== q.correct) {
+        btns[chosen].classList.add('wrong');
+    }
+
+    if (chosen === q.correct) {
+        p.score += PQ_POINTS;
+        document.getElementById('pq-score').textContent = p.score;
+        fb.innerHTML = '✅ Brawo! +' + PQ_POINTS + ' pkt!';
+        fb.className = 'feedback correct';
+    } else {
+        fb.innerHTML = '❌ Niestety! Poprawna odpowiedź: <strong>' + q.options[q.correct] + '</strong>';
+        fb.className = 'feedback wrong';
+    }
+
+    renderScoreboard('pq-scoreboard');
+    document.getElementById('pq-next-btn').classList.remove('hidden');
+    document.getElementById('pq-next-btn').focus();
+}
+
+function pqNext() {
+    pqIndex++;
+    if (pqIndex >= pqQuestions.length) {
+        showTransition3();
+        return;
+    }
+
+    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+    if (currentPlayerIdx === 0) pqRound++;
+
+    if (playerCount > 1) {
+        showHandoff('Faza 4: Wiedza o Polsce!', pqBeginTurn);
+    } else {
+        pqShowQuestion();
+    }
+}
+
+/* ═══════════════════════════════════════════
+   PRZEJŚCIE DO FAZY 5
    ═══════════════════════════════════════════ */
 
 function showTransition3() {
@@ -1240,6 +1352,10 @@ document.addEventListener('keydown', e => {
     } else if (active.id === 'phase3-screen') {
         if (!p3Answered) p3CheckAnswer();
         else p3Next();
+    } else if (active.id === 'transition-quiz-screen') {
+        startQuiz();
+    } else if (active.id === 'quiz-screen') {
+        if (pqAnswered) pqNext();
     } else if (active.id === 'transition3-screen') {
         startPhase4();
     }
