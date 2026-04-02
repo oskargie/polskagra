@@ -226,6 +226,8 @@
         <div class="phase-desc">
             Czas na bitwę! Za każde 10 punktów ze słówek<br>
             otrzymujesz 1 strzałę z łuku.<br>
+            Zwykła strzała zadaje 1 obrażenie (koszt: 1 strzała).<br>
+            Paląca strzała zadaje 2 obrażenia (koszt: 2 strzały).<br>
             Pokonaj przeciwników!
         </div>
         <div class="shots-summary" id="shots-summary"></div>
@@ -241,6 +243,7 @@
             &nbsp;|&nbsp; Strzały: <strong id="castle-shots-left">0</strong>
         </div>
         <div class="castle-controls">
+            <button id="castle-arrow-btn" class="castle-arrow-btn" onclick="castleToggleArrow()">🏹 Zwykła (1)</button>
             <button id="castle-dir-btn" class="castle-dir-btn" onclick="castleToggleDir()">← Lewo</button>
             <div class="castle-ctrl-group">
                 <label>Kąt:</label>

@@ -316,6 +316,13 @@ h2 { font-size: 1.8em; color: #4a3f8a; margin-bottom: 12px; }
 .castle-ctrl-group label { font-size: 0.95em; color: #555; }
 .castle-ctrl-group input[type=range] { width: 110px; accent-color: #764ba2; }
 .castle-val { font-weight: bold; color: #764ba2; min-width: 32px; }
+.castle-arrow-btn {
+    font-size: 1em; padding: 7px 14px; background: #f0eeff;
+    color: #764ba2; border: 2px solid #c9bef5; border-radius: 10px; cursor: pointer;
+}
+.castle-arrow-btn:hover { background: #d4ccf7; }
+.castle-arrow-btn.fire { background: #fff0e0; color: #e65100; border-color: #ff9800; }
+.castle-arrow-btn.fire:hover { background: #ffe0c0; }
 .castle-dir-btn {
     font-size: 1em; padding: 7px 16px; background: #f0eeff;
     color: #764ba2; border: 2px solid #c9bef5; border-radius: 10px; cursor: pointer;

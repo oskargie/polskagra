@@ -812,7 +812,7 @@ function showTransition3() {
    ═══════════════════════════════════════════ */
 
 const C_GRAVITY = 0.15;
-const C_HITS_TO_WIN = 5;
+const C_HITS_TO_WIN = 7;
 const C_CW = 36, C_CH = 42;
 
 let cCanvas, cCtx, cW, cH;
@@ -827,6 +827,7 @@ let cGameOver = false;
 let cAimDir = 1;
 let cAlivePlayers = [];
 let cBaseGround;
+let cFireArrow = false; // true = paląca strzała (dmg 2, koszt 2)
 
 let cLayout = []; // generated randomly each game
 
@@ -1096,27 +1097,42 @@ function cDrawCannon(idx) {
 
 function cDrawProjectile() {
     if (!cProjectile) return;
-    // Trail — faint dots
-    cCtx.fillStyle = 'rgba(180,140,80,0.4)';
-    cTrail.forEach(tp => {
-        cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 1.5 * tp.life, 0, Math.PI * 2); cCtx.fill();
-    });
-    // Arrow in flight — draw rotated arrow along velocity
+    const isFire = cProjectile.isFire;
+
+    // Trail
+    if (isFire) {
+        cTrail.forEach(tp => {
+            cCtx.fillStyle = 'rgba(255,' + Math.floor(100 + tp.life * 100) + ',0,' + (tp.life * 0.7) + ')';
+            cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 2.5 * tp.life, 0, Math.PI * 2); cCtx.fill();
+        });
+    } else {
+        cCtx.fillStyle = 'rgba(180,140,80,0.4)';
+        cTrail.forEach(tp => {
+            cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 1.5 * tp.life, 0, Math.PI * 2); cCtx.fill();
+        });
+    }
+
+    // Arrow in flight
     const vx = cProjectile.vx, vy = cProjectile.vy;
     const fAngle = Math.atan2(vy, vx);
     cCtx.save();
     cCtx.translate(cProjectile.x, cProjectile.y);
     cCtx.rotate(fAngle);
     // Shaft
-    cCtx.strokeStyle = '#654321'; cCtx.lineWidth = 1.5;
+    cCtx.strokeStyle = isFire ? '#8B2500' : '#654321'; cCtx.lineWidth = 1.5;
     cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(8, 0); cCtx.stroke();
     // Head
-    cCtx.fillStyle = '#888';
+    cCtx.fillStyle = isFire ? '#ff4400' : '#888';
     cCtx.beginPath(); cCtx.moveTo(8, 0); cCtx.lineTo(5, -2.5); cCtx.lineTo(5, 2.5); cCtx.fill();
     // Fletching
-    cCtx.fillStyle = '#cc4444';
+    cCtx.fillStyle = isFire ? '#ff6600' : '#cc4444';
     cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(-7, -3); cCtx.lineTo(-7, 0); cCtx.fill();
     cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(-7, 3); cCtx.lineTo(-7, 0); cCtx.fill();
+    // Fire glow
+    if (isFire) {
+        cCtx.fillStyle = 'rgba(255,100,0,0.4)';
+        cCtx.beginPath(); cCtx.arc(4, 0, 5, 0, Math.PI * 2); cCtx.fill();
+    }
     cCtx.restore();
 }
 
@@ -1139,6 +1155,25 @@ function cDraw() {
 }
 
 /* ─── Castle controls ─── */
+
+function castleToggleArrow() {
+    cFireArrow = !cFireArrow;
+    const btn = document.getElementById('castle-arrow-btn');
+    if (cFireArrow) {
+        btn.textContent = '🔥 Paląca (2)';
+        btn.className = 'castle-arrow-btn fire';
+    } else {
+        btn.textContent = '🏹 Zwykła (1)';
+        btn.className = 'castle-arrow-btn';
+    }
+}
+
+function cResetArrowToggle() {
+    cFireArrow = false;
+    const btn = document.getElementById('castle-arrow-btn');
+    btn.textContent = '🏹 Zwykła (1)';
+    btn.className = 'castle-arrow-btn';
+}
 
 function castleToggleDir() {
     cAimDir *= -1;
@@ -1173,11 +1208,12 @@ function cUpdateTurnUI() {
 function castleFire() {
     if (!cCanFire || cGameOver) return;
     const p = players[currentPlayerIdx];
-    if (p.shots <= 0) return;
+    const cost = cFireArrow ? 2 : 1;
+    if (p.shots < cost) return;
 
     cCanFire = false;
     document.getElementById('castle-fire-btn').disabled = true;
-    p.shots--;
+    p.shots -= cost;
     document.getElementById('castle-shots-left').textContent = p.shots;
 
     const c = cCastles[currentPlayerIdx];
@@ -1189,7 +1225,9 @@ function castleFire() {
 
     cProjectile = {
         x: cx + bx * 24, y: cy + by * 24,
-        vx: bx * power, vy: by * power
+        vx: bx * power, vy: by * power,
+        isFire: cFireArrow,
+        damage: cFireArrow ? 2 : 1
     };
     cTrail = [];
     requestAnimationFrame(cUpdateProjectile);
@@ -1212,8 +1250,11 @@ function cUpdateProjectile() {
         const oc = cCastles[i];
         if (cProjectile.x > oc.x && cProjectile.x < oc.x + oc.w &&
             cProjectile.y > oc.y && cProjectile.y < oc.y + oc.h) {
-            oc.hp--;
-            cSpawnExplosion(cProjectile.x, cProjectile.y, players[currentPlayerIdx].color);
+            oc.hp -= cProjectile.damage;
+            if (oc.hp < 0) oc.hp = 0;
+            const hitColor = cProjectile.isFire ? '#ff4400' : players[currentPlayerIdx].color;
+            cSpawnExplosion(cProjectile.x, cProjectile.y, hitColor);
+            if (cProjectile.isFire) cSpawnExplosion(cProjectile.x, cProjectile.y, '#ff8800');
             cProjectile = null;
             if (oc.hp <= 0) {
                 oc.alive = false;
@@ -1293,6 +1334,7 @@ function cNextTurn() {
     currentPlayerIdx = next;
     cRandomWind();
     cSetDefaultDir();
+    cResetArrowToggle();
     cUpdateTurnUI();
     cCanFire = true;
     document.getElementById('castle-fire-btn').disabled = false;
@@ -1360,6 +1402,7 @@ document.addEventListener('keydown', e => {
         if (e.key === 'ArrowRight') { pEl.value = Math.min(100, +pEl.value + 2); pEl.oninput(); return; }
         if (e.key === 'ArrowLeft') { pEl.value = Math.max(10, +pEl.value - 2); pEl.oninput(); return; }
         if (e.key === 'd' || e.key === 'D') { castleToggleDir(); return; }
+        if (e.key === 'f' || e.key === 'F') { castleToggleArrow(); return; }
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); castleFire(); return; }
     }
 
