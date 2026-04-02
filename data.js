@@ -2,7 +2,7 @@
    BAZA DANYCH GRY — pytania i słowa
    ═══════════════════════════════════════════ */
 
-// Faza 1: Uzupełnij brakujące słowo (50 zdań)
+// Faza 1: Uzupełnij brakujące słowo (135 zdań)
 const QUESTIONS = [
     { sentence: "Mama piecze ___ na urodziny.",                answer: "tort",       hint: "Coś słodkiego ze świeczkami" },
     { sentence: "W nocy na niebie świeci ___.",                answer: "księżyc",    hint: "Jest okrągły i jasny" },
@@ -108,6 +108,37 @@ const QUESTIONS = [
     { sentence: "Bocian stoi na jednej ___.",                  answer: "nodze",      hint: "Część ciała, na której stoimy" },
     { sentence: "Złota ___ spełnia życzenia w bajce.",         answer: "rybka",      hint: "Mały stwór pływający w wodzie" },
     { sentence: "Latem chodzimy na ___.",                      answer: "plażę",      hint: "Piasek i morze" },
+    // ── jeszcze więcej zdań ──
+    { sentence: "___ pada jesienią z drzew.",                  answer: "liście",     hint: "Żółte i czerwone, spadają na ziemię" },
+    { sentence: "Góral mieszka wysoko w ___.",                 answer: "górach",     hint: "Wysokie szczyty pokryte śniegiem" },
+    { sentence: "Wiosną kwitną ___.",                          answer: "kwiaty",     hint: "Kolorowe rośliny w ogrodzie" },
+    { sentence: "Latem świeci jasne ___.",                     answer: "słońce",     hint: "Gwiazda na naszym niebie" },
+    { sentence: "___ pływa w oceanie i tryska wodą.",          answer: "wieloryb",   hint: "Największe zwierzę na świecie" },
+    { sentence: "Aktor gra w ___.",                            answer: "filmie",     hint: "Oglądamy go w kinie" },
+    { sentence: "Na urodziny dostajemy ___.",                  answer: "prezenty",   hint: "Zapakowane niespodzianki" },
+    { sentence: "Kret kopie tunele pod ___.",                  answer: "ziemią",     hint: "Znajduje się pod trawą" },
+    { sentence: "Malarz maluje ___.",                          answer: "obrazy",     hint: "Kolorowe dzieła sztuki" },
+    { sentence: "Dzwon wisi na wieży ___.",                    answer: "kościoła",   hint: "Budynek z wieżyczką, gdzie się modlą" },
+    { sentence: "___ świeci latarnią na morzu.",               answer: "latarnia",   hint: "Wysoka wieża z mocnym światłem" },
+    { sentence: "Wiatr wieje i kręci ___.",                    answer: "wiatrakiem", hint: "Ma duże łopaty, które się obracają" },
+    { sentence: "Na podłodze leży miękki ___.",                answer: "dywan",      hint: "Ciepła tkanina pod stopami" },
+    { sentence: "Pirat szuka zakopanego ___.",                 answer: "skarbu",     hint: "Złoto i klejnoty w skrzyni" },
+    { sentence: "Komin wypuszcza ___.",                        answer: "dym",        hint: "Szary obłok lecący w górę" },
+    { sentence: "Żaglówka płynie dzięki ___.",                 answer: "wiatrowi",   hint: "Niewidzialna siła, która wieje" },
+    { sentence: "___ nosi listy i paczki.",                    answer: "listonosz",  hint: "Pracownik poczty" },
+    { sentence: "Okulary zakładamy na ___.",                   answer: "nos",        hint: "Środkowa część twarzy" },
+    { sentence: "W akwarium pływają kolorowe ___.",            answer: "rybki",      hint: "Małe wodne zwierzątka" },
+    { sentence: "Ciężarówka wiezie ciężki ___.",               answer: "ładunek",    hint: "Towary przewożone pojazdem" },
+    { sentence: "Bocian buduje gniazdo na ___.",               answer: "kominie",    hint: "Część domu, z której leci dym" },
+    { sentence: "Szewc naprawia stare ___.",                   answer: "buty",       hint: "Nosimy je na stopach" },
+    { sentence: "Lisek chowa się w ___.",                      answer: "norze",      hint: "Dziura w ziemi, dom zwierzęcia" },
+    { sentence: "Kolibry piją nektar z ___.",                  answer: "kwiatów",    hint: "Kolorowe rośliny pachnące pięknie" },
+    { sentence: "Mucha bzyczała i usiadła na ___.",            answer: "ścianie",    hint: "Pionowa powierzchnia w pokoju" },
+    { sentence: "W piekarni kupujemy świeży ___.",             answer: "chleb",      hint: "Podstawowy wypiek z mąki" },
+    { sentence: "Strażacy jeżdżą czerwonym ___.",             answer: "wozem",      hint: "Pojazd z syreną i drabiną" },
+    { sentence: "Na torcie zapalamy ___.",                     answer: "świeczki",   hint: "Małe ogniki na urodzinach" },
+    { sentence: "Kreda służy do pisania na ___.",              answer: "tablicy",    hint: "Ciemna powierzchnia w klasie" },
+    { sentence: "Biedronka ma czerwone skrzydła z ___.",       answer: "kropkami",   hint: "Małe czarne punkty" },
 ];
 
 // Faza 2: Szubienica (50 słów z kategorią)
