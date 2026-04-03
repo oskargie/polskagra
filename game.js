@@ -283,11 +283,12 @@ function p1CheckAnswer() {
     const p = players[currentPlayerIdx];
 
     if (isCorrect) {
-        const pts = Math.max(1, Math.round(10 * timeLeft / MAX_TIME));
+        const bonus = Math.max(1, Math.ceil(9 * timeLeft / MAX_TIME));
+        const pts = 10 + bonus;
         p.score += pts;
         document.getElementById('p1-score').textContent = p.score;
         input.className = 'correct';
-        fb.innerHTML = '✅ Brawo! +' + pts + ' pkt' + (pts >= 9 ? ' 🎉' : '');
+        fb.innerHTML = '✅ Brawo! +' + pts + ' pkt (10 + ' + bonus + ' za czas)' + (bonus >= 8 ? ' 🎉' : '');
         fb.className = 'feedback correct';
     } else {
         input.className = 'wrong';
