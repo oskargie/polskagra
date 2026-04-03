@@ -60,6 +60,59 @@ function shuffle(arr) {
     return a;
 }
 
+/* Podział polskiego tekstu na sylaby i kolorowanie */
+const VOWELS = 'aeiouyąęóAEIOUYĄĘÓ';
+function isVowel(ch) { return VOWELS.includes(ch); }
+
+function syllabifyWord(word) {
+    if (word.length <= 2) return [word];
+    // Find vowel positions
+    const vpos = [];
+    for (let i = 0; i < word.length; i++) {
+        if (isVowel(word[i])) vpos.push(i);
+    }
+    if (vpos.length <= 1) return [word];
+
+    // Split between consecutive vowels
+    const cuts = [];
+    for (let k = 0; k < vpos.length - 1; k++) {
+        const v1 = vpos[k], v2 = vpos[k + 1];
+        const gap = v2 - v1 - 1; // consonants between
+        if (gap === 0) {
+            cuts.push(v1 + 1); // split right between vowels
+        } else if (gap === 1) {
+            cuts.push(v1 + 1); // single consonant goes to next syllable
+        } else {
+            cuts.push(v2 - 1); // multiple consonants: last goes to next syllable
+        }
+    }
+
+    const syls = [];
+    let prev = 0;
+    for (const c of cuts) {
+        syls.push(word.substring(prev, c));
+        prev = c;
+    }
+    syls.push(word.substring(prev));
+    return syls;
+}
+
+function colorSyllables(text) {
+    let syllableIdx = 0;
+    const colors = ['#9b59b6', '#222', '#9b59b6'];
+    return text.split(/(\s+)/).map(token => {
+        if (/^\s+$/.test(token)) return token;
+        // Preserve HTML tags and special tokens like ___
+        if (token.includes('<') || token === '___') return token;
+        const syls = syllabifyWord(token);
+        return syls.map(s => {
+            const c = colors[syllableIdx % colors.length];
+            syllableIdx++;
+            return `<span style="color:${c}">${s}</span>`;
+        }).join('');
+    }).join('');
+}
+
 function normalize(str) {
     return str.toLowerCase().trim()
         .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e')
@@ -184,8 +237,8 @@ function p1ShowQuestion() {
     const q = p1Questions[p1Index];
     const parts = q.sentence.split('___');
     document.getElementById('sentence').innerHTML =
-        parts[0] + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + (parts[1] || '');
-    document.getElementById('p1-hint').textContent = 'Podpowiedź: ' + q.hint;
+        colorSyllables(parts[0]) + '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' + colorSyllables(parts[1] || '');
+    document.getElementById('p1-hint').innerHTML = 'Podpowiedź: ' + colorSyllables(q.hint);
     document.getElementById('p1-round').textContent = p1Round;
 
     const p = players[currentPlayerIdx];
@@ -210,7 +263,7 @@ function p1ShowQuestion() {
         const div = document.createElement('div');
         div.className = 'suggestion';
         div.dataset.answer = opt;
-        div.innerHTML = `<span class="suggestion-letter">${SUGGESTION_LETTERS[i]}</span>${opt}`;
+        div.innerHTML = `<span class="suggestion-letter">${SUGGESTION_LETTERS[i]}</span>${colorSyllables(opt)}`;
         sugC.appendChild(div);
     });
 
@@ -361,7 +414,7 @@ function p2InitRound() {
 
     document.getElementById('p2-round').textContent = p2RoundIdx + 1;
     document.getElementById('p2-rounds-total').textContent = p2TotalRounds;
-    document.getElementById('p2-hint').textContent = 'Kategoria: ' + entry.category;
+    document.getElementById('p2-hint').innerHTML = 'Kategoria: ' + colorSyllables(entry.category);
     document.getElementById('p2-feedback').className = 'feedback';
     document.getElementById('p2-next-btn').classList.add('hidden');
     document.getElementById('p2-play-area').style.display = '';
@@ -596,7 +649,7 @@ function p3BeginTurn() {
 
 function p3ShowQuestion() {
     const entry = p3Words[p3Index];
-    document.getElementById('p3-english-word').textContent = entry.en;
+    document.getElementById('p3-english-word').innerHTML = colorSyllables(entry.en);
     document.getElementById('p3-round').textContent = p3Round;
 
     const p = players[currentPlayerIdx];
@@ -702,7 +755,7 @@ function pqBeginTurn() {
 
 function pqShowQuestion() {
     const q = pqQuestions[pqIndex];
-    document.getElementById('pq-question').textContent = q.question;
+    document.getElementById('pq-question').innerHTML = colorSyllables(q.question);
     document.getElementById('pq-round').textContent = pqRound;
 
     const p = players[currentPlayerIdx];
@@ -719,7 +772,7 @@ function pqShowQuestion() {
     q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'quiz-option-btn';
-        btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt}`;
+        btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${colorSyllables(opt)}`;
         btn.onclick = () => pqAnswer(i);
         container.appendChild(btn);
     });
