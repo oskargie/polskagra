@@ -438,7 +438,7 @@ const POLAND_QUIZ = [
       options: ["Warszawa", "Poznań", "Łódź", "Kraków"], correct: 3 },
     { question: "W którym mieście znajduje się Neptun — słynna fontanna?",
       options: ["Gdańsk", "Szczecin", "Kraków", "Lublin"], correct: 0 },
-    { question: "Które miasto nazywane jest „miastem stu mostów"?",
+    { question: "Które miasto nazywane jest miastem stu mostów?",
       options: ["Kraków", "Warszawa", "Poznań", "Wrocław"], correct: 3 },
     // Geografia
     { question: "Jak nazywa się najdłuższa rzeka w Polsce?",
@@ -467,7 +467,7 @@ const POLAND_QUIZ = [
     { question: "Kto jest autorem hymnu polskiego?",
       options: ["Adam Mickiewicz", "Józef Wybicki", "Fryderyk Chopin", "Jan Kochanowski"], correct: 1 },
     // Historia i kultura
-    { question: "Kto napisał „Pana Tadeusza"?",
+    { question: "Kto napisał Pana Tadeusza?",
       options: ["Juliusz Słowacki", "Henryk Sienkiewicz", "Adam Mickiewicz", "Bolesław Prus"], correct: 2 },
     { question: "Jak nazywał się polski król, który wygrał bitwę pod Wiedniem?",
       options: ["Zygmunt III", "Jan III Sobieski", "Kazimierz Wielki", "Stefan Batory"], correct: 1 },
@@ -479,7 +479,7 @@ const POLAND_QUIZ = [
       options: ["Poetką", "Królową", "Naukowcem", "Malarką"], correct: 2 },
     { question: "Fryderyk Chopin był słynnym polskim…",
       options: ["malarzem", "pisarzem", "kompozytorem", "rzeźbiarzem"], correct: 2 },
-    { question: "Który polski pisarz otrzymał Nobla za „Quo Vadis"?",
+    { question: "Który polski pisarz otrzymał Nobla za Quo Vadis?",
       options: ["Adam Mickiewicz", "Henryk Sienkiewicz", "Wisława Szymborska", "Czesław Miłosz"], correct: 1 },
     // Tradycje i jedzenie
     { question: "Jakie tradycyjne polskie danie to kieszonki z ciasta z nadzieniem?",
