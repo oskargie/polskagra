@@ -1008,10 +1008,13 @@ function cGenerateLayout() {
     }));
 }
 
+let cObstacles = []; // trees and bushes
+
 function cBuildTerrain() {
     cTerrain = new Array(cW);
     for (let x = 0; x < cW; x++) cTerrain[x] = cBaseGround;
 
+    // Player hills
     cLayout.forEach(cfg => {
         if (cfg.hill > 10) {
             const hillWidth = 80 + Math.random() * 40;
@@ -1025,11 +1028,72 @@ function cBuildTerrain() {
         }
     });
 
+    // Extra random hills (2-4 additional)
+    const extraHills = 2 + Math.floor(Math.random() * 3);
+    for (let h = 0; h < extraHills; h++) {
+        const hx = 40 + Math.random() * (cW - 80);
+        const hh = 15 + Math.random() * 50;
+        const hw = 50 + Math.random() * 60;
+        for (let x = 0; x < cW; x++) {
+            const dist = Math.abs(x - hx);
+            if (dist < hw) {
+                const t = 1 - dist / hw;
+                cTerrain[x] -= hh * (0.5 + 0.5 * Math.cos(Math.PI * (1 - t)));
+            }
+        }
+    }
+
     // Delikatne nierówności
     const seed1 = Math.random() * 10, seed2 = Math.random() * 10;
     for (let x = 0; x < cW; x++) {
-        cTerrain[x] += Math.sin(x * 0.015 + seed1) * 3 + Math.sin(x * 0.04 + seed2) * 1.5;
+        cTerrain[x] += Math.sin(x * 0.015 + seed1) * 4 + Math.sin(x * 0.04 + seed2) * 2;
     }
+
+    // Generate obstacles (1-2 trees or bushes)
+    cObstacles = [];
+    const numObs = 1 + Math.floor(Math.random() * 2);
+    const playerXs = cLayout.map(c => c.x);
+    for (let i = 0; i < numObs; i++) {
+        let ox, attempts = 0;
+        do {
+            ox = 50 + Math.random() * (cW - 100);
+            attempts++;
+        } while (attempts < 100 && playerXs.some(px => Math.abs(px - ox) < 60));
+        const gy = cTerrainAt(ox);
+        const type = Math.random() < 0.5 ? 'tree' : 'bush';
+        cObstacles.push({ x: ox, groundY: gy, type });
+    }
+}
+
+function cDrawObstacles() {
+    cObstacles.forEach(ob => {
+        const x = ob.x, gy = ob.groundY;
+        if (ob.type === 'tree') {
+            // Trunk
+            cCtx.fillStyle = '#5a3a1a';
+            cCtx.fillRect(x - 3, gy - 28, 6, 28);
+            // Canopy
+            cCtx.fillStyle = '#2d6b1e';
+            cCtx.beginPath();
+            cCtx.moveTo(x - 16, gy - 24);
+            cCtx.lineTo(x, gy - 50);
+            cCtx.lineTo(x + 16, gy - 24);
+            cCtx.fill();
+            cCtx.fillStyle = '#3a8a28';
+            cCtx.beginPath();
+            cCtx.moveTo(x - 12, gy - 32);
+            cCtx.lineTo(x, gy - 52);
+            cCtx.lineTo(x + 12, gy - 32);
+            cCtx.fill();
+        } else {
+            // Bush
+            cCtx.fillStyle = '#3d7a2a';
+            cCtx.beginPath(); cCtx.arc(x, gy - 8, 10, 0, Math.PI * 2); cCtx.fill();
+            cCtx.fillStyle = '#4a9a35';
+            cCtx.beginPath(); cCtx.arc(x - 6, gy - 10, 7, 0, Math.PI * 2); cCtx.fill();
+            cCtx.beginPath(); cCtx.arc(x + 6, gy - 10, 7, 0, Math.PI * 2); cCtx.fill();
+        }
+    });
 }
 
 function cTerrainAt(x) {
@@ -1293,6 +1357,7 @@ function cDraw() {
     cCtx.clearRect(0, 0, cW, cH);
     cDrawSky();
     cDrawTerrain();
+    cDrawObstacles();
     cCastles.forEach((c, i) => cDrawCastle(c, i));
     cCastles.forEach((_, i) => cDrawCannon(i));
     cDrawProjectile();
