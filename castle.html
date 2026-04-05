@@ -87,6 +87,14 @@
         }
         #restart-btn:hover { background: #219a52; }
         .legend { color: #888; font-size: 0.82em; margin-top: 6px; }
+        .shop { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
+        .shop-btn {
+            font-size: 0.95em; padding: 6px 14px; background: #1a3a2a;
+            color: #4caf50; border: 2px solid #2e7d32; border-radius: 10px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .shop-btn:hover:not(:disabled) { background: #2e5a3a; border-color: #4caf50; }
+        .shop-btn:disabled { background: #333; color: #666; border-color: #555; cursor: default; }
     </style>
 </head>
 <body>
@@ -107,6 +115,10 @@
     <div id="wind-info"></div>
     <div id="shots-info"></div>
     <div class="turn-info">Tura: <span class="pn" id="turn-name"></span></div>
+    <div class="shop">
+        <button id="buy-shield" class="shop-btn" onclick="buyShield()">🛡️ Tarcza +1 HP (3 strzały)</button>
+        <button id="buy-armor" class="shop-btn" onclick="buyArmor()">🪖 Zbroja +1 HP (3 strzały)</button>
+    </div>
     <div class="controls">
         <button id="arrow-btn" onclick="toggleArrow()">🏹 Zwykła (1)</button>
         <button id="dir-btn" onclick="toggleDir()">← Lewo</button>
@@ -122,7 +134,7 @@
         </div>
         <button id="fire-btn" onclick="fire()">Ognia!</button>
     </div>
-    <div class="legend">Klawiatura: ↑↓ kąt · ←→ siła · D kierunek · F typ strzały · Enter/Spacja ogień</div>
+    <div class="legend">Klawiatura: ↑↓ kąt · ←→ siła · D kierunek · F typ strzały · Enter/Spacja ogień · Za 3 strzały: tarcza lub zbroja (+1 HP)</div>
     <button id="restart-btn" onclick="backToSetup()">Zagraj ponownie</button>
 </div>
 
@@ -280,8 +292,9 @@ function initCastles() {
         const gy = terrainAt(cfg.x);
         return {
             x: cfg.x - CW / 2, y: gy - CH, groundY: gy,
-            w: CW, h: CH, hp: HITS_TO_WIN,
-            color: PCOLORS[i], alive: true
+            w: CW, h: CH, hp: HITS_TO_WIN, maxHp: HITS_TO_WIN,
+            color: PCOLORS[i], alive: true,
+            hasShield: false, hasArmor: false
         };
     });
 }
@@ -339,10 +352,11 @@ function darken(hex, amt) {
 
 function drawArcher(c, idx) {
     if (!c.alive) return;
-    const dmg = HITS_TO_WIN - c.hp;
     const cx = c.x + c.w / 2;
     const baseY = c.groundY;
-    const col = darken(c.color, dmg * 10);
+    const maxHp = c.maxHp || HITS_TO_WIN;
+    const dmgMarks = maxHp - c.hp;
+    const col = darken(c.color, Math.max(0, dmgMarks) * 10);
 
     // Legs
     ctx.strokeStyle = col; ctx.lineWidth = 3;
@@ -372,9 +386,34 @@ function drawArcher(c, idx) {
     ctx.moveTo(cx - 7, baseY - 37); ctx.lineTo(cx, baseY - 47); ctx.lineTo(cx + 7, baseY - 37);
     ctx.fill();
 
+    // Shield
+    if (c.hasShield) {
+        ctx.fillStyle = 'rgba(100,149,237,0.6)';
+        ctx.strokeStyle = '#4169e1'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - 14, baseY - 30);
+        ctx.lineTo(cx - 20, baseY - 28);
+        ctx.lineTo(cx - 20, baseY - 20);
+        ctx.lineTo(cx - 14, baseY - 16);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+    }
+
+    // Armor
+    if (c.hasArmor) {
+        ctx.fillStyle = 'rgba(192,192,192,0.5)';
+        ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+        ctx.fillRect(cx - 6, baseY - 31, 12, 14);
+        ctx.strokeRect(cx - 6, baseY - 31, 12, 14);
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 31); ctx.lineTo(cx, baseY - 17);
+        ctx.moveTo(cx - 6, baseY - 24); ctx.lineTo(cx + 6, baseY - 24);
+        ctx.stroke();
+    }
+
     // Damage X marks
     ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 1.5;
-    for (let i = 0; i < dmg; i++) {
+    for (let i = 0; i < Math.min(dmgMarks, 7); i++) {
         const dx = cx - 4 + (i % 3) * 4;
         const dy = baseY - 30 + Math.floor(i / 3) * 5;
         ctx.beginPath();
@@ -388,12 +427,12 @@ function drawArcher(c, idx) {
     const bx = cx - bw / 2, by = baseY - 56;
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
     ctx.fillStyle = '#444'; ctx.fillRect(bx, by, bw, bh);
-    const pct = c.hp / HITS_TO_WIN;
+    const pct = c.hp / maxHp;
     ctx.fillStyle = pct > 0.4 ? '#2ecc71' : pct > 0.2 ? '#f39c12' : '#e74c3c';
     ctx.fillRect(bx, by, bw * pct, bh);
 
     ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(c.hp + '/' + HITS_TO_WIN, cx, by - 2);
+    ctx.fillText(c.hp + '/' + maxHp, cx, by - 2);
 
     // Name
     ctx.fillStyle = c.color; ctx.font = 'bold 11px sans-serif';
@@ -682,12 +721,41 @@ function randomWind() {
     document.getElementById('wind-info').textContent = 'Wiatr: ' + str + ' ' + dir;
 }
 
+function buyShield() {
+    if (!canFire || gameOver) return;
+    const p = players[currentPlayer];
+    if (p.shots < 3) return;
+    p.shots -= 3;
+    const c = castles[currentPlayer];
+    c.hp += 1; c.maxHp += 1; c.hasShield = true;
+    updateTurnUI();
+    draw();
+}
+
+function buyArmor() {
+    if (!canFire || gameOver) return;
+    const p = players[currentPlayer];
+    if (p.shots < 3) return;
+    p.shots -= 3;
+    const c = castles[currentPlayer];
+    c.hp += 1; c.maxHp += 1; c.hasArmor = true;
+    updateTurnUI();
+    draw();
+}
+
+function updateShopButtons() {
+    const p = players[currentPlayer];
+    document.getElementById('buy-shield').disabled = !canFire || gameOver || p.shots < 3;
+    document.getElementById('buy-armor').disabled = !canFire || gameOver || p.shots < 3;
+}
+
 function updateTurnUI() {
     const p = players[currentPlayer];
     const el = document.getElementById('turn-name');
     el.textContent = p.name;
     el.style.color = p.color;
     document.getElementById('shots-info').textContent = 'Strzały: ' + p.shots;
+    updateShopButtons();
 }
 
 function endGame(winnerIdx) {
