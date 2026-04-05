@@ -116,8 +116,8 @@
     <div id="shots-info"></div>
     <div class="turn-info">Tura: <span class="pn" id="turn-name"></span></div>
     <div class="shop">
-        <button id="buy-shield" class="shop-btn" onclick="buyShield()">🛡️ Tarcza +1 HP (3 strzały)</button>
-        <button id="buy-armor" class="shop-btn" onclick="buyArmor()">🪖 Zbroja +1 HP (3 strzały)</button>
+        <button id="buy-shield" class="shop-btn" onclick="buyShield()">🛡️ Tarcza +1 HP (1 strzała)</button>
+        <button id="buy-armor" class="shop-btn" onclick="buyArmor()">🪖 Zbroja +1 HP (1 strzała)</button>
     </div>
     <div class="controls">
         <button id="arrow-btn" onclick="toggleArrow()">🏹 Zwykła (1)</button>
@@ -134,7 +134,7 @@
         </div>
         <button id="fire-btn" onclick="fire()">Ognia!</button>
     </div>
-    <div class="legend">Klawiatura: ↑↓ kąt · ←→ siła · D kierunek · F typ strzały · Enter/Spacja ogień · Za 3 strzały: tarcza lub zbroja (+1 HP)</div>
+    <div class="legend">Klawiatura: ↑↓ kąt · ←→ siła · D kierunek · F typ strzały · Enter/Spacja ogień · Za 1 strzałę: tarcza lub zbroja (+1 HP)</div>
     <button id="restart-btn" onclick="backToSetup()">Zagraj ponownie</button>
 </div>
 
@@ -143,7 +143,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 const GRAVITY = 0.15;
-const HITS_TO_WIN = 7;
+const HITS_TO_WIN = 10;
 const CW = 36, CH = 42;
 
 const PCOLORS = ['#e74c3c','#3498db','#27ae60','#f39c12'];
@@ -724,8 +724,8 @@ function randomWind() {
 function buyShield() {
     if (!canFire || gameOver) return;
     const p = players[currentPlayer];
-    if (p.shots < 3) return;
-    p.shots -= 3;
+    if (p.shots < 1) return;
+    p.shots -= 1;
     const c = castles[currentPlayer];
     c.hp += 1; c.maxHp += 1; c.hasShield = true;
     updateTurnUI();
@@ -735,8 +735,8 @@ function buyShield() {
 function buyArmor() {
     if (!canFire || gameOver) return;
     const p = players[currentPlayer];
-    if (p.shots < 3) return;
-    p.shots -= 3;
+    if (p.shots < 1) return;
+    p.shots -= 1;
     const c = castles[currentPlayer];
     c.hp += 1; c.maxHp += 1; c.hasArmor = true;
     updateTurnUI();
@@ -745,8 +745,8 @@ function buyArmor() {
 
 function updateShopButtons() {
     const p = players[currentPlayer];
-    document.getElementById('buy-shield').disabled = !canFire || gameOver || p.shots < 3;
-    document.getElementById('buy-armor').disabled = !canFire || gameOver || p.shots < 3;
+    document.getElementById('buy-shield').disabled = !canFire || gameOver || p.shots < 1;
+    document.getElementById('buy-armor').disabled = !canFire || gameOver || p.shots < 1;
 }
 
 function updateTurnUI() {

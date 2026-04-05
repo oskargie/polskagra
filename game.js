@@ -903,7 +903,7 @@ function afterBattleRound() {
    ═══════════════════════════════════════════ */
 
 const C_GRAVITY = 0.15;
-const C_HITS_TO_WIN = 7;
+const C_HITS_TO_WIN = 10;
 const C_CW = 36, C_CH = 42;
 
 let cCanvas, cCtx, cW, cH;
@@ -1340,8 +1340,8 @@ function cRandomWind() {
 function castleBuyShield() {
     if (!cCanFire || cGameOver) return;
     const p = players[currentPlayerIdx];
-    if (p.shots < 3) return;
-    p.shots -= 3;
+    if (p.shots < 1) return;
+    p.shots -= 1;
     const c = cCastles[currentPlayerIdx];
     c.hp += 1;
     c.maxHp += 1;
@@ -1353,8 +1353,8 @@ function castleBuyShield() {
 function castleBuyArmor() {
     if (!cCanFire || cGameOver) return;
     const p = players[currentPlayerIdx];
-    if (p.shots < 3) return;
-    p.shots -= 3;
+    if (p.shots < 1) return;
+    p.shots -= 1;
     const c = cCastles[currentPlayerIdx];
     c.hp += 1;
     c.maxHp += 1;
@@ -1365,8 +1365,8 @@ function castleBuyArmor() {
 
 function cUpdateShopButtons() {
     const p = players[currentPlayerIdx];
-    document.getElementById('castle-buy-shield').disabled = !cCanFire || cGameOver || p.shots < 3;
-    document.getElementById('castle-buy-armor').disabled = !cCanFire || cGameOver || p.shots < 3;
+    document.getElementById('castle-buy-shield').disabled = !cCanFire || cGameOver || p.shots < 1;
+    document.getElementById('castle-buy-armor').disabled = !cCanFire || cGameOver || p.shots < 1;
 }
 
 function cUpdateTurnUI() {
