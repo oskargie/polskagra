@@ -842,9 +842,9 @@ function showTransition3() {
         return;
     }
 
-    // Oblicz strzały: 1 za każde 10 pkt
+    // Oblicz strzały: 1 za każde 5 pkt
     players.forEach(p => {
-        p.shots = Math.max(1, Math.floor(p.score / 10));
+        p.shots = Math.max(1, Math.floor(p.score / 5));
     });
 
     const container = document.getElementById('shots-summary');
