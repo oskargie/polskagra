@@ -1271,10 +1271,10 @@ function cSetDefaultDir() {
 }
 
 function cRandomWind() {
-    cWind = (Math.random() - 0.5) * 0.08;
+    cWind = (Math.random() - 0.5) * 0.12;
     const dir = cWind > 0 ? '→' : '←';
     const s = Math.abs(cWind);
-    const str = s < 0.02 ? 'Słaby' : s < 0.05 ? 'Umiarkowany' : 'Silny';
+    const str = s < 0.02 ? 'Słaby' : s < 0.04 ? 'Umiarkowany' : 'Silny';
     document.getElementById('castle-wind').textContent = 'Wiatr: ' + str + ' ' + dir;
 }
 

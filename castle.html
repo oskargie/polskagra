@@ -714,10 +714,10 @@ function nextTurn() {
 }
 
 function randomWind() {
-    wind = (Math.random() - 0.5) * 0.08;
+    wind = (Math.random() - 0.5) * 0.12;
     const dir = wind > 0 ? '→' : '←';
     const s = Math.abs(wind);
-    const str = s < 0.02 ? 'Słaby' : s < 0.05 ? 'Umiarkowany' : 'Silny';
+    const str = s < 0.02 ? 'Słaby' : s < 0.04 ? 'Umiarkowany' : 'Silny';
     document.getElementById('wind-info').textContent = 'Wiatr: ' + str + ' ' + dir;
 }
 
