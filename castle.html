@@ -707,9 +707,9 @@ function nextTurn() {
     setDefaultDir();
     fireArrow = false;
     resetArrowBtn();
-    updateTurnUI();
     canFire = true;
     document.getElementById('fire-btn').disabled = false;
+    updateTurnUI();
     draw();
 }
 

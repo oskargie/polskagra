@@ -1510,9 +1510,9 @@ function cNextTurn() {
     cRandomWind();
     cSetDefaultDir();
     cResetArrowToggle();
-    cUpdateTurnUI();
     cCanFire = true;
     document.getElementById('castle-fire-btn').disabled = false;
+    cUpdateTurnUI();
     cDraw();
 }
 
