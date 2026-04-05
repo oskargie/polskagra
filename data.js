@@ -2,7 +2,7 @@
    BAZA DANYCH GRY — pytania i słowa
    ═══════════════════════════════════════════ */
 
-// Faza 1: Uzupełnij brakujące słowo (135 zdań)
+// Faza 1: Uzupełnij brakujące słowo (162 zdania)
 const QUESTIONS = [
     { sentence: "Mama piecze ___ na urodziny.",                answer: "tort",       hint: "Coś słodkiego ze świeczkami" },
     { sentence: "W nocy na niebie świeci ___.",                answer: "księżyc",    hint: "Jest okrągły i jasny" },
@@ -139,6 +139,35 @@ const QUESTIONS = [
     { sentence: "Na torcie zapalamy ___.",                     answer: "świeczki",   hint: "Małe ogniki na urodzinach" },
     { sentence: "Kreda służy do pisania na ___.",              answer: "tablicy",    hint: "Ciemna powierzchnia w klasie" },
     { sentence: "Biedronka ma czerwone skrzydła z ___.",       answer: "kropkami",   hint: "Małe czarne punkty" },
+    { sentence: "Wiosną na drzewach pojawiają się ___.",      answer: "liście",     hint: "Zielone i rosną na gałęziach" },
+    { sentence: "Krowa daje nam białe ___.",                   answer: "mleko",      hint: "Zdrowy napój dla dzieci" },
+    { sentence: "Na plaży budujemy zamki z ___.",              answer: "piasku",     hint: "Drobne ziarnka na plaży" },
+    { sentence: "Dziadek nosi ___ na nosie.",                  answer: "okulary",    hint: "Pomagają lepiej widzieć" },
+    { sentence: "Nocą na niebie migoczą ___.",                 answer: "gwiazdy",    hint: "Małe światełka na ciemnym niebie" },
+    { sentence: "Ptak śpiewa piękną ___.",                     answer: "piosenkę",   hint: "Melodia z ust lub dzioba" },
+    { sentence: "Dzieci jeżdżą do szkoły ___.",               answer: "autobusem",  hint: "Duży pojazd z wieloma miejscami" },
+    { sentence: "Na podłodze leży miękki ___.",                answer: "dywan",      hint: "Można po nim chodzić boso" },
+    { sentence: "Mama kroi chleb ostrym ___.",                 answer: "nożem",      hint: "Narzędzie z ostrzem" },
+    { sentence: "Kotek bawi się kłębkiem ___.",                answer: "wełny",      hint: "Miękka nić zwinięta w kulkę" },
+    { sentence: "Jesienią liście zmieniają ___.",              answer: "kolor",      hint: "Z zielonego na żółty i czerwony" },
+    { sentence: "Pszczoły mieszkają w ___.",                   answer: "ulu",        hint: "Domek dla owadów robiących miód" },
+    { sentence: "Na obiad tata gotuje ___.",                   answer: "zupę",       hint: "Ciepłe danie jedzone łyżką" },
+    { sentence: "W parku dzieci karmią ___.",                  answer: "kaczki",     hint: "Ptaki pływające w stawie" },
+    { sentence: "Zimą dzieci jeżdżą na ___.",                 answer: "sankach",    hint: "Ślizgają się po śniegu" },
+    { sentence: "Na śniadanie piję ciepłe ___.",               answer: "kakao",      hint: "Czekoladowy napój" },
+    { sentence: "W ogrodzie rośnie wysoka ___.",               answer: "jabłoń",     hint: "Drzewo z pysznymi owocami" },
+    { sentence: "Rano myję zęby ___.",                         answer: "szczoteczką", hint: "Narzędzie do czyszczenia zębów" },
+    { sentence: "Pociąg jedzie po ___.",                       answer: "torach",     hint: "Metalowe szyny" },
+    { sentence: "Chmury zakryły ___.",                         answer: "słońce",     hint: "Świeci jasno na niebie" },
+    { sentence: "Krawiec szyje ubrania ___.",                  answer: "igłą",       hint: "Cienka i ostra, z oczkiem na nić" },
+    { sentence: "W akwarium pływają kolorowe ___.",            answer: "rybki",      hint: "Małe zwierzątka wodne" },
+    { sentence: "Sowa poluje w ___.",                          answer: "nocy",       hint: "Pora dnia, gdy jest ciemno" },
+    { sentence: "Latem chętnie jemy ___.",                     answer: "lody",       hint: "Zimna słodka przekąska" },
+    { sentence: "Tęcza ma siedem ___.",                        answer: "kolorów",    hint: "Czerwony, pomarańczowy, żółty..." },
+    { sentence: "Ślimak nosi na grzbiecie ___.",               answer: "muszlę",     hint: "Okrągły domek na plecach" },
+    { sentence: "W bibliotece wypożyczamy ___.",               answer: "książki",    hint: "Mają strony z tekstem" },
+    { sentence: "Wiatr porusza skrzydłami ___.",               answer: "wiatraka",   hint: "Budowla z obracającymi się łopatami" },
+    { sentence: "Na lekcji plastyki malujemy ___.",            answer: "farbami",    hint: "Kolorowe substancje do malowania" },
 ];
 
 // Faza 2: Szubienica (50 słów z kategorią)
