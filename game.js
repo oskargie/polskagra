@@ -668,7 +668,8 @@ function p3BeginTurn() {
 
 function p3ShowQuestion() {
     const entry = p3Words[p3Index];
-    document.getElementById('p3-english-word').innerHTML = colorSyllables(entry.en);
+    document.getElementById('p3-english-word').innerHTML = colorSyllables(entry.en)
+        + (entry.pos ? ' <span class="pos-tag">(' + entry.pos + ')</span>' : '');
     document.getElementById('p3-round').textContent = p3Round;
 
     const p = players[currentPlayerIdx];
