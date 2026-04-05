@@ -328,6 +328,16 @@ h2 { font-size: 1.8em; color: #4a3f8a; margin-bottom: 12px; }
     color: #764ba2; border: 2px solid #c9bef5; border-radius: 10px; cursor: pointer;
 }
 .castle-dir-btn:hover { background: #d4ccf7; }
+.castle-shop {
+    display: flex; gap: 10px; justify-content: center; margin-top: 8px;
+}
+.castle-shop-btn {
+    font-size: 0.95em; padding: 6px 14px; background: #e8f5e9;
+    color: #2e7d32; border: 2px solid #81c784; border-radius: 10px;
+    cursor: pointer; transition: all 0.2s;
+}
+.castle-shop-btn:hover:not(:disabled) { background: #c8e6c9; border-color: #4caf50; }
+.castle-shop-btn:disabled { background: #eee; color: #aaa; border-color: #ccc; cursor: default; }
 .castle-fire-btn {
     font-size: 1.1em; padding: 8px 24px; background: #e74c3c;
     color: #fff; border: none; border-radius: 10px; cursor: pointer;

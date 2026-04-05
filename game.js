@@ -980,8 +980,9 @@ function cInitCastles() {
         const gy = cTerrainAt(cfg.x);
         return {
             x: cfg.x - C_CW / 2, y: gy - C_CH, groundY: gy,
-            w: C_CW, h: C_CH, hp: C_HITS_TO_WIN,
-            color: players[i].color, alive: true
+            w: C_CW, h: C_CH, hp: C_HITS_TO_WIN, maxHp: C_HITS_TO_WIN,
+            color: players[i].color, alive: true,
+            hasShield: false, hasArmor: false
         };
     });
 }
@@ -1071,9 +1072,37 @@ function cDrawCastle(c, idx) {
     cCtx.moveTo(cx - 7, baseY - 37); cCtx.lineTo(cx, baseY - 47); cCtx.lineTo(cx + 7, baseY - 37);
     cCtx.fill();
 
+    // Shield (drawn on left side of body)
+    if (c.hasShield) {
+        cCtx.fillStyle = 'rgba(100,149,237,0.6)';
+        cCtx.strokeStyle = '#4169e1'; cCtx.lineWidth = 1.5;
+        cCtx.beginPath();
+        cCtx.moveTo(cx - 14, baseY - 30);
+        cCtx.lineTo(cx - 20, baseY - 28);
+        cCtx.lineTo(cx - 20, baseY - 20);
+        cCtx.lineTo(cx - 14, baseY - 16);
+        cCtx.closePath();
+        cCtx.fill(); cCtx.stroke();
+    }
+
+    // Armor (drawn as a breastplate on torso)
+    if (c.hasArmor) {
+        cCtx.fillStyle = 'rgba(192,192,192,0.5)';
+        cCtx.strokeStyle = '#888'; cCtx.lineWidth = 1;
+        cCtx.fillRect(cx - 6, baseY - 31, 12, 14);
+        cCtx.strokeRect(cx - 6, baseY - 31, 12, 14);
+        // Cross detail
+        cCtx.beginPath();
+        cCtx.moveTo(cx, baseY - 31); cCtx.lineTo(cx, baseY - 17);
+        cCtx.moveTo(cx - 6, baseY - 24); cCtx.lineTo(cx + 6, baseY - 24);
+        cCtx.stroke();
+    }
+
     // Damage indicators (X marks on body)
     cCtx.strokeStyle = '#ff0000'; cCtx.lineWidth = 1.5;
-    for (let i = 0; i < dmg; i++) {
+    const maxHp = c.maxHp || C_HITS_TO_WIN;
+    const dmgMarks = maxHp - c.hp;
+    for (let i = 0; i < Math.min(dmgMarks, 7); i++) {
         const dx = cx - 4 + (i % 3) * 4;
         const dy = baseY - 30 + Math.floor(i / 3) * 5;
         cCtx.beginPath();
@@ -1087,12 +1116,12 @@ function cDrawCastle(c, idx) {
     const bx = cx - bw / 2, by = baseY - 56;
     cCtx.fillStyle = 'rgba(0,0,0,0.5)'; cCtx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
     cCtx.fillStyle = '#444'; cCtx.fillRect(bx, by, bw, bh);
-    const pct = c.hp / C_HITS_TO_WIN;
+    const pct = c.hp / maxHp;
     cCtx.fillStyle = pct > 0.4 ? '#2ecc71' : pct > 0.2 ? '#f39c12' : '#e74c3c';
     cCtx.fillRect(bx, by, bw * pct, bh);
 
     cCtx.fillStyle = '#fff'; cCtx.font = 'bold 9px sans-serif'; cCtx.textAlign = 'center';
-    cCtx.fillText(c.hp + '/' + C_HITS_TO_WIN, cx, by - 2);
+    cCtx.fillText(c.hp + '/' + maxHp, cx, by - 2);
 
     // Name
     cCtx.fillStyle = c.color; cCtx.font = 'bold 11px sans-serif';
@@ -1249,12 +1278,45 @@ function cRandomWind() {
     document.getElementById('castle-wind').textContent = 'Wiatr: ' + str + ' ' + dir;
 }
 
+function castleBuyShield() {
+    if (!cCanFire || cGameOver) return;
+    const p = players[currentPlayerIdx];
+    if (p.shots < 3) return;
+    p.shots -= 3;
+    const c = cCastles[currentPlayerIdx];
+    c.hp += 1;
+    c.maxHp += 1;
+    c.hasShield = true;
+    cUpdateTurnUI();
+    cDraw();
+}
+
+function castleBuyArmor() {
+    if (!cCanFire || cGameOver) return;
+    const p = players[currentPlayerIdx];
+    if (p.shots < 3) return;
+    p.shots -= 3;
+    const c = cCastles[currentPlayerIdx];
+    c.hp += 1;
+    c.maxHp += 1;
+    c.hasArmor = true;
+    cUpdateTurnUI();
+    cDraw();
+}
+
+function cUpdateShopButtons() {
+    const p = players[currentPlayerIdx];
+    document.getElementById('castle-buy-shield').disabled = !cCanFire || cGameOver || p.shots < 3;
+    document.getElementById('castle-buy-armor').disabled = !cCanFire || cGameOver || p.shots < 3;
+}
+
 function cUpdateTurnUI() {
     const p = players[currentPlayerIdx];
     const el = document.getElementById('castle-turn-name');
     el.textContent = p.name;
     el.style.color = p.color;
     document.getElementById('castle-shots-left').textContent = p.shots;
+    cUpdateShopButtons();
 }
 
 /* ─── Castle fire ─── */

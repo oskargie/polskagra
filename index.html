@@ -228,6 +228,7 @@
             otrzymujesz 1 strzałę z łuku.<br>
             Zwykła strzała zadaje 1 obrażenie (koszt: 1 strzała).<br>
             Paląca strzała zadaje 2 obrażenia (koszt: 2 strzały).<br>
+            Za 3 strzały możesz też kupić tarczę lub zbroję (+1 HP).<br>
             Pokonaj przeciwników!
         </div>
         <div class="shots-summary" id="shots-summary"></div>
@@ -241,6 +242,10 @@
         <div class="castle-turn-info">
             Tura: <span class="castle-pn" id="castle-turn-name"></span>
             &nbsp;|&nbsp; Strzały: <strong id="castle-shots-left">0</strong>
+        </div>
+        <div class="castle-shop">
+            <button id="castle-buy-shield" class="castle-shop-btn" onclick="castleBuyShield()">🛡️ Tarcza +1 HP (3 strzały)</button>
+            <button id="castle-buy-armor" class="castle-shop-btn" onclick="castleBuyArmor()">🪖 Zbroja +1 HP (3 strzały)</button>
         </div>
         <div class="castle-controls">
             <button id="castle-arrow-btn" class="castle-arrow-btn" onclick="castleToggleArrow()">🏹 Zwykła (1)</button>
