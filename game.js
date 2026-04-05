@@ -1051,7 +1051,7 @@ function cBuildTerrain() {
 
     // Generate obstacles (1-2 trees or bushes)
     cObstacles = [];
-    const numObs = 1 + Math.floor(Math.random() * 2);
+    const numObs = 2 + Math.floor(Math.random() * 3);
     const playerXs = cLayout.map(c => c.x);
     for (let i = 0; i < numObs; i++) {
         let ox, attempts = 0;
