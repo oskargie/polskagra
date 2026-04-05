@@ -219,20 +219,18 @@
         <div class="scoreboard" id="pq-scoreboard"></div>
     </div>
 
-    <!-- ═══ EKRAN PRZEJŚCIA DO FAZY 5 ═══ -->
-    <div id="transition3-screen" class="screen">
+    <!-- ═══ EKRAN PRZEJŚCIA DO BITWY ═══ -->
+    <div id="battle-transition-screen" class="screen">
         <div class="phase-icon">🏹</div>
-        <div class="phase-title">Faza 5: Bitwa Łuczników!</div>
-        <div class="phase-desc">
-            Czas na bitwę! Za każde 5 punktów ze słówek<br>
+        <div class="phase-title" id="battle-transition-title">Bitwa Łuczników!</div>
+        <div class="phase-desc" id="battle-transition-desc">
+            Czas na bitwę! Za każde 5 punktów z tej fazy<br>
             otrzymujesz 1 strzałę z łuku.<br>
-            Zwykła strzała zadaje 1 obrażenie (koszt: 1 strzała).<br>
-            Paląca strzała zadaje 2 obrażenia (koszt: 2 strzały).<br>
-            Za 3 strzały możesz też kupić tarczę lub zbroję (+1 HP).<br>
-            Pokonaj przeciwników!
+            Zwykła strzała: 1 obrażenie (koszt: 1). Paląca: 2 obrażenia (koszt: 2).<br>
+            Za 3 strzały: tarcza lub zbroja (+1 HP).
         </div>
         <div class="shots-summary" id="shots-summary"></div>
-        <button class="btn-primary" onclick="startPhase4()">Do boju!</button>
+        <button class="btn-primary" onclick="startBattleRound()">Do boju!</button>
     </div>
 
     <!-- ═══ FAZA 4: OBLĘŻENIE ZAMKÓW ═══ -->

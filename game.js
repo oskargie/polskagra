@@ -47,6 +47,19 @@ let pqAnswered = false;
 // Jaka akcja po kliknięciu "Gotowy" na handoff
 let handoffCallback = null;
 
+// Battle rounds
+let battleRound = 0; // 0-3 (after phases 1-4)
+let phaseScoreSnapshot = []; // score at start of each word phase
+let cInitialized = false; // true after first battle round inits terrain/castles
+const BATTLE_PHASE_NAMES = ['Faza 1', 'Faza 2', 'Faza 3', 'Faza 4'];
+// What to do after each battle round:
+const AFTER_BATTLE = [
+    () => showScreen('transition-screen'),   // after battle 1 → Phase 2
+    () => showScreen('transition2-screen'),   // after battle 2 → Phase 3
+    () => showScreen('transition-quiz-screen'), // after battle 3 → Phase 4
+    () => showEndScreen()                     // after battle 4 → End
+];
+
 /* ═══════════════════════════════════════════
    NARZĘDZIA
    ═══════════════════════════════════════════ */
@@ -190,6 +203,9 @@ function startGame() {
         players.push({ name, color: PLAYER_COLORS[i], score: 0 });
     }
     currentPlayerIdx = 0;
+    battleRound = 0;
+    cInitialized = false;
+    phaseScoreSnapshot = players.map(p => p.score);
     startPhase1();
 }
 
@@ -215,6 +231,7 @@ document.getElementById('handoff-btn').addEventListener('click', () => {
    ═══════════════════════════════════════════ */
 
 function startPhase1() {
+    phaseScoreSnapshot = players.map(p => p.score);
     p1Questions = shuffle(QUESTIONS).slice(0, TOTAL_ROUNDS * playerCount);
     p1Index = 0;
     p1Round = 1;
@@ -361,9 +378,9 @@ function p1CheckAnswer() {
 function p1Next() {
     p1Index++;
     if (p1Index >= p1Questions.length) {
-        // koniec fazy 1 → przejście do fazy 2
+        // koniec fazy 1 → bitwa łuczników
         clearInterval(timerInterval);
-        showScreen('transition-screen');
+        showBattleTransition();
         return;
     }
 
@@ -382,6 +399,7 @@ function p1Next() {
    ═══════════════════════════════════════════ */
 
 function startPhase2() {
+    phaseScoreSnapshot = players.map(p => p.score);
     p2TotalRounds = 2 * playerCount;
     p2Words = shuffle(HANGMAN_WORDS).slice(0, p2TotalRounds);
     p2RoundIdx = 0;
@@ -609,7 +627,7 @@ function p2EndRound() {
 function p2NextRound() {
     p2RoundIdx++;
     if (p2RoundIdx >= p2TotalRounds) {
-        showScreen('transition2-screen');
+        showBattleTransition();
         return;
     }
     currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
@@ -626,6 +644,7 @@ function p2NextRound() {
    ═══════════════════════════════════════════ */
 
 function startPhase3() {
+    phaseScoreSnapshot = players.map(p => p.score);
     const totalWords = P3_TURNS_PER_PLAYER * playerCount;
     p3Words = shuffle(TRANSLATION_WORDS).slice(0, totalWords);
     p3Index = 0;
@@ -713,7 +732,7 @@ function p3CheckAnswer() {
 function p3Next() {
     p3Index++;
     if (p3Index >= p3Words.length) {
-        showScreen('transition-quiz-screen');
+        showBattleTransition();
         return;
     }
 
@@ -732,6 +751,7 @@ function p3Next() {
    ═══════════════════════════════════════════ */
 
 function startQuiz() {
+    phaseScoreSnapshot = players.map(p => p.score);
     const total = PQ_TURNS_PER_PLAYER * playerCount;
     pqQuestions = shuffle(POLAND_QUIZ).slice(0, total);
     pqIndex = 0;
@@ -817,7 +837,7 @@ function pqAnswer(chosen) {
 function pqNext() {
     pqIndex++;
     if (pqIndex >= pqQuestions.length) {
-        showTransition3();
+        showBattleTransition();
         return;
     }
 
@@ -832,33 +852,50 @@ function pqNext() {
 }
 
 /* ═══════════════════════════════════════════
-   PRZEJŚCIE DO FAZY 5
+   PRZEJŚCIE DO BITWY ŁUCZNIKÓW
    ═══════════════════════════════════════════ */
 
-function showTransition3() {
-    // Przy jednym graczu nie ma bitwy zamków
+function showBattleTransition() {
+    // Przy jednym graczu pomijamy bitwę
     if (playerCount === 1) {
-        showEndScreen();
+        afterBattleRound();
         return;
     }
 
-    // Oblicz strzały: 1 za każde 5 pkt
-    players.forEach(p => {
-        p.shots = Math.max(1, Math.floor(p.score / 5));
+    // Oblicz strzały z punktów zdobytych w tej fazie
+    players.forEach((p, i) => {
+        const phasePoints = p.score - phaseScoreSnapshot[i];
+        p.shots = Math.max(1, Math.floor(phasePoints / 5));
     });
+
+    // Aktualizuj tytuł
+    document.getElementById('battle-transition-title').textContent =
+        'Bitwa po ' + BATTLE_PHASE_NAMES[battleRound] + '!';
 
     const container = document.getElementById('shots-summary');
     container.innerHTML = '';
-    players.forEach(p => {
+    players.forEach((p, i) => {
+        const phasePoints = p.score - phaseScoreSnapshot[i];
         const row = document.createElement('div');
         row.className = 'shots-row';
         row.innerHTML =
             `<span class="sb-dot" style="background:${p.color}"></span>` +
-            `<span>${p.name}: ${p.score} pkt → <strong>${p.shots} strzał${p.shots === 1 ? '' : p.shots < 5 ? 'y' : 'ów'}</strong></span>`;
+            `<span>${p.name}: +${phasePoints} pkt → <strong>${p.shots} strzał${p.shots === 1 ? '' : p.shots < 5 ? 'y' : 'ów'}</strong></span>`;
         container.appendChild(row);
     });
 
-    showScreen('transition3-screen');
+    showScreen('battle-transition-screen');
+}
+
+function afterBattleRound() {
+    battleRound++;
+    // Snapshot scores for next phase
+    phaseScoreSnapshot = players.map(p => p.score);
+    if (battleRound < 4) {
+        AFTER_BATTLE[battleRound - 1]();
+    } else {
+        AFTER_BATTLE[3]();
+    }
 }
 
 /* ═══════════════════════════════════════════
@@ -885,18 +922,39 @@ let cFireArrow = false; // true = paląca strzała (dmg 2, koszt 2)
 
 let cLayout = []; // generated randomly each game
 
-function startPhase4() {
+function startBattleRound() {
     cCanvas = document.getElementById('castle-canvas');
     cCtx = cCanvas.getContext('2d');
     cW = cCanvas.width;
     cH = cCanvas.height;
     cBaseGround = cH - 50;
 
-    cGenerateLayout();
-    cBuildTerrain();
-    cInitCastles();
-    cAlivePlayers = players.map((_, i) => i);
-    currentPlayerIdx = 0;
+    if (!cInitialized) {
+        // First battle round: generate terrain and castles
+        cGenerateLayout();
+        cBuildTerrain();
+        cInitCastles();
+        cInitialized = true;
+    } else {
+        // Subsequent rounds: regenerate terrain, reposition castles, keep HP/items
+        cGenerateLayout();
+        cBuildTerrain();
+        // Update castle positions while preserving HP, shield, armor
+        cLayout.forEach((cfg, i) => {
+            const gy = cTerrainAt(cfg.x);
+            cCastles[i].x = cfg.x - C_CW / 2;
+            cCastles[i].y = gy - C_CH;
+            cCastles[i].groundY = gy;
+        });
+    }
+
+    cAlivePlayers = [];
+    for (let i = 0; i < playerCount; i++) {
+        if (cCastles[i].alive) cAlivePlayers.push(i);
+    }
+
+    // Find first alive player with shots
+    currentPlayerIdx = cAlivePlayers.find(i => players[i].shots > 0) || cAlivePlayers[0];
     cAimDir = 1;
     cGameOver = false;
     cProjectile = null;
@@ -906,6 +964,7 @@ function startPhase4() {
 
     cRandomWind();
     cSetDefaultDir();
+    cResetArrowToggle();
     cUpdateTurnUI();
     showScreen('phase4-screen');
     cDraw();
@@ -1459,17 +1518,27 @@ function cNextTurn() {
 
 function cEndGame(winnerIdx) {
     cGameOver = true;
-    // Dodaj bonusowe punkty zwycięzcy
-    players[winnerIdx].score += 20;
 
-    const wc = cCastles[winnerIdx];
+    // If someone was eliminated (only 1 left), bonus points
+    if (cAlivePlayers.length <= 1 && winnerIdx !== undefined) {
+        players[winnerIdx].score += 10;
+    }
+
+    const wc = cCastles[winnerIdx !== undefined ? winnerIdx : 0];
     for (let i = 0; i < 5; i++) {
         setTimeout(() => {
             cSpawnExplosion(wc.x + Math.random() * wc.w, wc.y - 15 - Math.random() * 30, '#ffd700');
         }, i * 200);
     }
 
-    setTimeout(showEndScreen, 1500);
+    // If all opponents eliminated, final winner — go to end screen
+    if (cAlivePlayers.length <= 1) {
+        players[winnerIdx].score += 20;
+        setTimeout(showEndScreen, 1500);
+    } else {
+        // Shots depleted — proceed to next word phase
+        setTimeout(afterBattleRound, 1200);
+    }
 }
 
 /* ═══════════════════════════════════════════
@@ -1544,8 +1613,8 @@ document.addEventListener('keydown', e => {
         startQuiz();
     } else if (active.id === 'quiz-screen') {
         if (pqAnswered) pqNext();
-    } else if (active.id === 'transition3-screen') {
-        startPhase4();
+    } else if (active.id === 'battle-transition-screen') {
+        startBattleRound();
     }
 });
 
