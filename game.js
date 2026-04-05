@@ -263,7 +263,7 @@ function p1ShowQuestion() {
         const div = document.createElement('div');
         div.className = 'suggestion';
         div.dataset.answer = opt;
-        div.innerHTML = `<span class="suggestion-letter">${SUGGESTION_LETTERS[i]}</span>${colorSyllables(opt)}`;
+        div.innerHTML = `<span class="suggestion-letter">${SUGGESTION_LETTERS[i]}</span>${opt}`;
         sugC.appendChild(div);
     });
 
@@ -772,7 +772,7 @@ function pqShowQuestion() {
     q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'quiz-option-btn';
-        btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${colorSyllables(opt)}`;
+        btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${opt}`;
         btn.onclick = () => pqAnswer(i);
         container.appendChild(btn);
     });
