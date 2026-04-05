@@ -294,7 +294,8 @@ function initCastles() {
             x: cfg.x - CW / 2, y: gy - CH, groundY: gy,
             w: CW, h: CH, hp: HITS_TO_WIN, maxHp: HITS_TO_WIN,
             color: PCOLORS[i], alive: true,
-            hasShield: false, hasArmor: false
+            hasShield: false, hasArmor: false,
+            roundShield: false, roundArmor: false
         };
     });
 }
@@ -724,10 +725,11 @@ function randomWind() {
 function buyShield() {
     if (!canFire || gameOver) return;
     const p = players[currentPlayer];
-    if (p.shots < 1) return;
-    p.shots -= 1;
     const c = castles[currentPlayer];
+    if (p.shots < 1 || c.roundShield) return;
+    p.shots -= 1;
     c.hp += 1; c.maxHp += 1; c.hasShield = true;
+    c.roundShield = true;
     updateTurnUI();
     draw();
 }
@@ -735,18 +737,20 @@ function buyShield() {
 function buyArmor() {
     if (!canFire || gameOver) return;
     const p = players[currentPlayer];
-    if (p.shots < 1) return;
-    p.shots -= 1;
     const c = castles[currentPlayer];
+    if (p.shots < 1 || c.roundArmor) return;
+    p.shots -= 1;
     c.hp += 1; c.maxHp += 1; c.hasArmor = true;
+    c.roundArmor = true;
     updateTurnUI();
     draw();
 }
 
 function updateShopButtons() {
     const p = players[currentPlayer];
-    document.getElementById('buy-shield').disabled = !canFire || gameOver || p.shots < 1;
-    document.getElementById('buy-armor').disabled = !canFire || gameOver || p.shots < 1;
+    const c = castles[currentPlayer];
+    document.getElementById('buy-shield').disabled = !canFire || gameOver || p.shots < 1 || c.roundShield;
+    document.getElementById('buy-armor').disabled = !canFire || gameOver || p.shots < 1 || c.roundArmor;
 }
 
 function updateTurnUI() {

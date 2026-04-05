@@ -951,6 +951,8 @@ function startBattleRound() {
     cAlivePlayers = [];
     for (let i = 0; i < playerCount; i++) {
         if (cCastles[i].alive) cAlivePlayers.push(i);
+        cCastles[i].roundShield = false;
+        cCastles[i].roundArmor = false;
     }
 
     // Find first alive player with shots
@@ -1041,7 +1043,8 @@ function cInitCastles() {
             x: cfg.x - C_CW / 2, y: gy - C_CH, groundY: gy,
             w: C_CW, h: C_CH, hp: C_HITS_TO_WIN, maxHp: C_HITS_TO_WIN,
             color: players[i].color, alive: true,
-            hasShield: false, hasArmor: false
+            hasShield: false, hasArmor: false,
+            roundShield: false, roundArmor: false
         };
     });
 }
@@ -1340,12 +1343,13 @@ function cRandomWind() {
 function castleBuyShield() {
     if (!cCanFire || cGameOver) return;
     const p = players[currentPlayerIdx];
-    if (p.shots < 1) return;
-    p.shots -= 1;
     const c = cCastles[currentPlayerIdx];
+    if (p.shots < 1 || c.roundShield) return;
+    p.shots -= 1;
     c.hp += 1;
     c.maxHp += 1;
     c.hasShield = true;
+    c.roundShield = true;
     cUpdateTurnUI();
     cDraw();
 }
@@ -1353,20 +1357,22 @@ function castleBuyShield() {
 function castleBuyArmor() {
     if (!cCanFire || cGameOver) return;
     const p = players[currentPlayerIdx];
-    if (p.shots < 1) return;
-    p.shots -= 1;
     const c = cCastles[currentPlayerIdx];
+    if (p.shots < 1 || c.roundArmor) return;
+    p.shots -= 1;
     c.hp += 1;
     c.maxHp += 1;
     c.hasArmor = true;
+    c.roundArmor = true;
     cUpdateTurnUI();
     cDraw();
 }
 
 function cUpdateShopButtons() {
     const p = players[currentPlayerIdx];
-    document.getElementById('castle-buy-shield').disabled = !cCanFire || cGameOver || p.shots < 1;
-    document.getElementById('castle-buy-armor').disabled = !cCanFire || cGameOver || p.shots < 1;
+    const c = cCastles[currentPlayerIdx];
+    document.getElementById('castle-buy-shield').disabled = !cCanFire || cGameOver || p.shots < 1 || c.roundShield;
+    document.getElementById('castle-buy-armor').disabled = !cCanFire || cGameOver || p.shots < 1 || c.roundArmor;
 }
 
 function cUpdateTurnUI() {
