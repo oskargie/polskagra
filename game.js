@@ -964,6 +964,7 @@ function startBattleRound() {
     cParticles = [];
     cTrail = [];
     cCanFire = true;
+    document.getElementById('castle-fire-btn').disabled = false;
 
     cRandomWind();
     cSetDefaultDir();
