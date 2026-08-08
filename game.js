@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    POLSKIE SŁÓWKA — logika gry
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 const PLAYER_COLORS = ['#e74c3c', '#3498db', '#27ae60', '#f39c12'];
 const PLAYER_DEFAULTS = ['Gracz 1', 'Gracz 2', 'Gracz 3', 'Gracz 4'];
@@ -60,9 +60,9 @@ const AFTER_BATTLE = [
     () => showEndScreen()                     // after battle 4 → End
 ];
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    NARZĘDZIA
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function shuffle(arr) {
     const a = [...arr];
@@ -171,9 +171,9 @@ function setBanner(bannerId, player) {
     b.style.background = player.color;
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    SETUP
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function setPlayerCount(n) {
     playerCount = n;
@@ -209,9 +209,9 @@ function startGame() {
     startPhase1();
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    HANDOFF (przekazanie urządzenia)
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function showHandoff(subtitle, callback) {
     const p = players[currentPlayerIdx];
@@ -226,9 +226,9 @@ document.getElementById('handoff-btn').addEventListener('click', () => {
     if (handoffCallback) handoffCallback();
 });
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    FAZA 1 — uzupełnianie zdań
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function startPhase1() {
     phaseScoreSnapshot = players.map(p => p.score);
@@ -394,9 +394,9 @@ function p1Next() {
     }
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    FAZA 2 — szubienica
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function startPhase2() {
     phaseScoreSnapshot = players.map(p => p.score);
@@ -639,9 +639,9 @@ function p2NextRound() {
     }
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    FAZA 3 — tłumaczenie z angielskiego
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function startPhase3() {
     phaseScoreSnapshot = players.map(p => p.score);
@@ -747,9 +747,9 @@ function p3Next() {
     }
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    FAZA 4 — quiz o Polsce
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function startQuiz() {
     phaseScoreSnapshot = players.map(p => p.score);
@@ -852,9 +852,9 @@ function pqNext() {
     }
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    PRZEJŚCIE DO BITWY ŁUCZNIKÓW
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function showBattleTransition() {
     // Przy jednym graczu pomijamy bitwę
@@ -899,13 +899,14 @@ function afterBattleRound() {
     }
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    FAZA 4 — oblężenie zamków
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 const C_GRAVITY = 0.15;
 const C_HITS_TO_WIN = 10;
-const C_CW = 36, C_CH = 42;
+const C_CW = 34, C_CH = 58;   // wieża
+const C_CAT_OFF = 32;         // odsunięcie katapulty przed wieżą
 
 let cCanvas, cCtx, cW, cH;
 let cTerrain = [];
@@ -947,6 +948,7 @@ function startBattleRound() {
             cCastles[i].y = gy - C_CH;
             cCastles[i].groundY = gy;
         });
+        cUpdateFacings();
     }
 
     cAlivePlayers = [];
@@ -1060,7 +1062,7 @@ function cBuildTerrain() {
         do {
             ox = 50 + Math.random() * (cW - 100);
             attempts++;
-        } while (attempts < 100 && playerXs.some(px => Math.abs(px - ox) < 60));
+        } while (attempts < 100 && playerXs.some(px => Math.abs(px - ox) < 85));
         const gy = cTerrainAt(ox);
         const type = Math.random() < 0.5 ? 'tree' : 'bush';
         cObstacles.push({ x: ox, groundY: gy, type });
@@ -1109,9 +1111,26 @@ function cInitCastles() {
             x: cfg.x - C_CW / 2, y: gy - C_CH, groundY: gy,
             w: C_CW, h: C_CH, hp: C_HITS_TO_WIN, maxHp: C_HITS_TO_WIN,
             color: players[i].color, alive: true,
+            facing: cfg.x < cW / 2 ? 1 : -1,
             hasShield: false, hasArmor: false,
             roundShield: false, roundArmor: false
         };
+    });
+    cUpdateFacings();
+}
+
+/* Katapulta staje po stronie najbliższego przeciwnika */
+function cUpdateFacings() {
+    cCastles.forEach((c, i) => {
+        const mx = c.x + c.w / 2;
+        let bestX = null, bestD = Infinity;
+        cCastles.forEach((o, j) => {
+            if (i === j) return;
+            const ox = o.x + o.w / 2;
+            const d = Math.abs(ox - mx);
+            if (d < bestD) { bestD = d; bestX = ox; }
+        });
+        c.facing = bestX === null ? (mx < cW / 2 ? 1 : -1) : (bestX >= mx ? 1 : -1);
     });
 }
 
@@ -1167,81 +1186,127 @@ function cDrawTerrain() {
 
 function cDrawCastle(c, idx) {
     if (!c.alive) return;
-    const dmg = C_HITS_TO_WIN - c.hp;
+    const maxHp = c.maxHp || C_HITS_TO_WIN;
+    const dmg = maxHp - c.hp;
     const cx = c.x + c.w / 2;
     const baseY = c.groundY;
-    const col = cDarken(c.color, dmg * 10);
+    const topY = baseY - C_CH;                       // korona murów
+    const col = cDarken(c.color, Math.min(dmg * 7, 55));
+    const dark = cDarken(col, 45);
 
-    // Legs
-    cCtx.strokeStyle = col; cCtx.lineWidth = 3;
+    // ── Korpus wieży ──
+    const body = cCtx.createLinearGradient(c.x, 0, c.x + c.w, 0);
+    body.addColorStop(0, dark);
+    body.addColorStop(0.35, col);
+    body.addColorStop(1, dark);
+    cCtx.fillStyle = body;
+    cCtx.fillRect(c.x, topY, c.w, C_CH);
+
+    // Kamienne warstwy
+    cCtx.strokeStyle = 'rgba(0,0,0,0.3)'; cCtx.lineWidth = 1;
+    let row = 0;
+    for (let y = topY; y < baseY - 2; y += 9, row++) {
+        cCtx.beginPath(); cCtx.moveTo(c.x, y); cCtx.lineTo(c.x + c.w, y); cCtx.stroke();
+        // pionowe spoiny, przesunięte co drugą warstwę
+        const off = (row % 2) * (c.w / 4);
+        for (let jx = c.x + off + c.w / 4; jx < c.x + c.w - 1; jx += c.w / 2) {
+            cCtx.beginPath();
+            cCtx.moveTo(jx, y); cCtx.lineTo(jx, Math.min(y + 9, baseY));
+            cCtx.stroke();
+        }
+    }
+
+    // ── Blanki (krenelaż) ──
+    const mw = c.w / 5;
+    for (let m = 0; m < 3; m++) {
+        const mx = c.x + m * mw * 2;
+        cCtx.fillStyle = col; cCtx.fillRect(mx, topY - 8, mw, 8);
+        cCtx.strokeStyle = dark; cCtx.lineWidth = 1; cCtx.strokeRect(mx, topY - 8, mw, 8);
+    }
+
+    // ── Okno strzelnicze ──
+    cCtx.fillStyle = '#14100c';
+    cCtx.fillRect(cx - 2, topY + 11, 4, 11);
+    cCtx.beginPath(); cCtx.arc(cx, topY + 11, 2, Math.PI, 0); cCtx.fill();
+
+    // ── Brama ──
+    const dw = 13, dh = 17;
+    cCtx.fillStyle = '#4a2f14';
     cCtx.beginPath();
-    cCtx.moveTo(cx - 6, baseY); cCtx.lineTo(cx - 2, baseY - 16);
-    cCtx.moveTo(cx + 6, baseY); cCtx.lineTo(cx + 2, baseY - 16);
-    cCtx.stroke();
-
-    // Body (torso)
-    cCtx.fillStyle = col;
-    cCtx.fillRect(cx - 7, baseY - 32, 14, 16);
-
-    // Arms
-    cCtx.strokeStyle = col; cCtx.lineWidth = 2.5;
-    cCtx.beginPath();
-    cCtx.moveTo(cx - 7, baseY - 28); cCtx.lineTo(cx - 14, baseY - 22);
-    cCtx.moveTo(cx + 7, baseY - 28); cCtx.lineTo(cx + 14, baseY - 22);
-    cCtx.stroke();
-
-    // Head
-    cCtx.fillStyle = '#f5cfa0';
-    cCtx.beginPath(); cCtx.arc(cx, baseY - 37, 6, 0, Math.PI * 2); cCtx.fill();
-
-    // Hat/helmet
-    cCtx.fillStyle = col;
-    cCtx.beginPath();
-    cCtx.moveTo(cx - 7, baseY - 37); cCtx.lineTo(cx, baseY - 47); cCtx.lineTo(cx + 7, baseY - 37);
+    cCtx.moveTo(cx - dw / 2, baseY);
+    cCtx.lineTo(cx - dw / 2, baseY - dh + 6);
+    cCtx.arc(cx, baseY - dh + 6, dw / 2, Math.PI, 0);
+    cCtx.lineTo(cx + dw / 2, baseY);
+    cCtx.closePath();
     cCtx.fill();
+    cCtx.strokeStyle = '#2a1a08'; cCtx.lineWidth = 1; cCtx.stroke();
+    // okucia bramy
+    cCtx.strokeStyle = '#6b4a22';
+    cCtx.beginPath();
+    cCtx.moveTo(cx - dw / 2, baseY - 6); cCtx.lineTo(cx + dw / 2, baseY - 6);
+    cCtx.stroke();
 
-    // Shield (drawn on left side of body)
+    // ── Zbroja: żelazne obręcze ──
+    if (c.hasArmor) {
+        cCtx.strokeStyle = 'rgba(205,212,224,0.8)'; cCtx.lineWidth = 2.5;
+        [topY + 27, topY + 45].forEach(y => {
+            cCtx.beginPath(); cCtx.moveTo(c.x - 1, y); cCtx.lineTo(c.x + c.w + 1, y); cCtx.stroke();
+            cCtx.fillStyle = '#e4e9f2';
+            [c.x + 3, c.x + c.w - 3].forEach(rx => {
+                cCtx.beginPath(); cCtx.arc(rx, y, 1.4, 0, Math.PI * 2); cCtx.fill();
+            });
+        });
+    }
+
+    // ── Tarcza zawieszona na murze ──
     if (c.hasShield) {
-        cCtx.fillStyle = 'rgba(100,149,237,0.6)';
-        cCtx.strokeStyle = '#4169e1'; cCtx.lineWidth = 1.5;
+        const sy = topY + 34;
+        cCtx.fillStyle = 'rgba(100,149,237,0.9)';
+        cCtx.strokeStyle = '#eaf0ff'; cCtx.lineWidth = 1.3;
         cCtx.beginPath();
-        cCtx.moveTo(cx - 14, baseY - 30);
-        cCtx.lineTo(cx - 20, baseY - 28);
-        cCtx.lineTo(cx - 20, baseY - 20);
-        cCtx.lineTo(cx - 14, baseY - 16);
+        cCtx.moveTo(cx - 7, sy - 8);
+        cCtx.lineTo(cx + 7, sy - 8);
+        cCtx.lineTo(cx + 7, sy + 1);
+        cCtx.quadraticCurveTo(cx, sy + 9, cx - 7, sy + 1);
         cCtx.closePath();
         cCtx.fill(); cCtx.stroke();
-    }
-
-    // Armor (drawn as a breastplate on torso)
-    if (c.hasArmor) {
-        cCtx.fillStyle = 'rgba(192,192,192,0.5)';
-        cCtx.strokeStyle = '#888'; cCtx.lineWidth = 1;
-        cCtx.fillRect(cx - 6, baseY - 31, 12, 14);
-        cCtx.strokeRect(cx - 6, baseY - 31, 12, 14);
-        // Cross detail
+        cCtx.lineWidth = 1;
         cCtx.beginPath();
-        cCtx.moveTo(cx, baseY - 31); cCtx.lineTo(cx, baseY - 17);
-        cCtx.moveTo(cx - 6, baseY - 24); cCtx.lineTo(cx + 6, baseY - 24);
+        cCtx.moveTo(cx, sy - 8); cCtx.lineTo(cx, sy + 5);
+        cCtx.moveTo(cx - 7, sy - 3); cCtx.lineTo(cx + 7, sy - 3);
         cCtx.stroke();
     }
 
-    // Damage indicators (X marks on body)
-    cCtx.strokeStyle = '#ff0000'; cCtx.lineWidth = 1.5;
-    const maxHp = c.maxHp || C_HITS_TO_WIN;
-    const dmgMarks = maxHp - c.hp;
-    for (let i = 0; i < Math.min(dmgMarks, 7); i++) {
-        const dx = cx - 4 + (i % 3) * 4;
-        const dy = baseY - 30 + Math.floor(i / 3) * 5;
-        cCtx.beginPath();
-        cCtx.moveTo(dx - 2, dy - 2); cCtx.lineTo(dx + 2, dy + 2);
-        cCtx.moveTo(dx + 2, dy - 2); cCtx.lineTo(dx - 2, dy + 2);
-        cCtx.stroke();
+    // ── Pęknięcia od trafień (deterministyczne, nie migoczą) ──
+    if (dmg > 0) {
+        cCtx.strokeStyle = 'rgba(18,12,8,0.8)'; cCtx.lineWidth = 1.2;
+        for (let i = 0; i < Math.min(dmg, 8); i++) {
+            const s = idx * 37 + i * 91 + 13;
+            const sx = c.x + 4 + (s % (c.w - 8));
+            const sy = topY + 8 + ((s * 7) % (C_CH - 20));
+            cCtx.beginPath();
+            cCtx.moveTo(sx, sy);
+            cCtx.lineTo(sx + (s % 5) - 2, sy + 5);
+            cCtx.lineTo(sx + (s % 7) - 3, sy + 10);
+            cCtx.stroke();
+        }
     }
 
-    // HP bar
-    const bw = 36, bh = 5;
-    const bx = cx - bw / 2, by = baseY - 56;
+    // ── Maszt i chorągiew (powiewa zgodnie z wiatrem) ──
+    const poleTop = topY - 26;
+    cCtx.strokeStyle = '#6a5a44'; cCtx.lineWidth = 1.5;
+    cCtx.beginPath(); cCtx.moveTo(cx, topY - 8); cCtx.lineTo(cx, poleTop); cCtx.stroke();
+    const fd = cWind >= 0 ? 1 : -1;
+    cCtx.fillStyle = c.color;
+    cCtx.beginPath();
+    cCtx.moveTo(cx, poleTop);
+    cCtx.lineTo(cx + fd * 14, poleTop + 4);
+    cCtx.lineTo(cx, poleTop + 9);
+    cCtx.closePath(); cCtx.fill();
+
+    // ── Pasek HP ──
+    const bw = 38, bh = 5;
+    const bx = cx - bw / 2, by = topY - 38;
     cCtx.fillStyle = 'rgba(0,0,0,0.5)'; cCtx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
     cCtx.fillStyle = '#444'; cCtx.fillRect(bx, by, bw, bh);
     const pct = c.hp / maxHp;
@@ -1251,59 +1316,117 @@ function cDrawCastle(c, idx) {
     cCtx.fillStyle = '#fff'; cCtx.font = 'bold 9px sans-serif'; cCtx.textAlign = 'center';
     cCtx.fillText(c.hp + '/' + maxHp, cx, by - 2);
 
-    // Name
+    // Imię
     cCtx.fillStyle = c.color; cCtx.font = 'bold 11px sans-serif';
     cCtx.fillText(players[idx].name, cx, by - 13);
 
-    // Highlight current
+    // Podświetlenie aktywnego gracza
     if (idx === currentPlayerIdx && cCanFire && !cGameOver) {
         cCtx.strokeStyle = '#ffd700'; cCtx.lineWidth = 1.5; cCtx.setLineDash([3, 3]);
-        cCtx.strokeRect(cx - 16, baseY - 50, 32, 52);
+        cCtx.strokeRect(c.x - 4, topY - 12, c.w + 8, C_CH + 16);
         cCtx.setLineDash([]);
     }
 }
 
-function cDrawCannon(idx) {
+/* Pozycja katapulty — stoi na ziemi przed wieżą */
+function cCatapultPos(idx) {
+    const c = cCastles[idx];
+    const x = c.x + c.w / 2 + c.facing * C_CAT_OFF;
+    const gy = cTerrainAt(x);
+    return { x: x, groundY: gy, pivotX: x, pivotY: gy - 22 };
+}
+
+function cDrawCatapult(idx) {
     const c = cCastles[idx];
     if (!c.alive) return;
-    const cx = c.x + c.w / 2;
-    const cy = c.groundY - 28; // hand height
+    const pos = cCatapultPos(idx);
+    const gx = pos.x, gy = pos.groundY;
     const isActive = idx === currentPlayerIdx && cCanFire && !cGameOver;
     const angle = isActive ? parseInt(document.getElementById('castle-angle').value) : 45;
-    const dir = isActive ? cAimDir : (c.x < cW / 2 ? 1 : -1);
+    const dir = isActive ? cAimDir : c.facing;
     const rad = -angle * Math.PI / 180;
-    const bx = Math.cos(rad) * dir, by = Math.sin(rad);
-    const aimAngle = Math.atan2(by, bx);
+    const aimAngle = Math.atan2(Math.sin(rad), Math.cos(rad) * dir);
 
-    // Bow
+    const wood = '#7a4a1e', woodDark = '#523310', woodLight = '#9c6531';
+
+    // ── Koła ──
+    [-10, 10].forEach(off => {
+        const wx = gx + off, wy = gy - 5;
+        cCtx.fillStyle = woodDark;
+        cCtx.beginPath(); cCtx.arc(wx, wy, 5.5, 0, Math.PI * 2); cCtx.fill();
+        cCtx.strokeStyle = woodLight; cCtx.lineWidth = 1.3;
+        cCtx.beginPath(); cCtx.arc(wx, wy, 5.5, 0, Math.PI * 2); cCtx.stroke();
+        cCtx.lineWidth = 1;
+        for (let s = 0; s < 3; s++) {
+            const a = s * Math.PI / 3;
+            cCtx.beginPath();
+            cCtx.moveTo(wx - Math.cos(a) * 4.5, wy - Math.sin(a) * 4.5);
+            cCtx.lineTo(wx + Math.cos(a) * 4.5, wy + Math.sin(a) * 4.5);
+            cCtx.stroke();
+        }
+    });
+
+    // ── Rama podstawy ──
+    cCtx.fillStyle = wood;
+    cCtx.fillRect(gx - 16, gy - 13, 32, 6);
+    cCtx.strokeStyle = woodDark; cCtx.lineWidth = 1;
+    cCtx.strokeRect(gx - 16, gy - 13, 32, 6);
+
+    // ── Kozioł (rama A) ──
+    cCtx.strokeStyle = wood; cCtx.lineWidth = 3.5;
+    cCtx.beginPath();
+    cCtx.moveTo(gx - 8, gy - 13); cCtx.lineTo(gx, gy - 22);
+    cCtx.moveTo(gx + 8, gy - 13); cCtx.lineTo(gx, gy - 22);
+    cCtx.stroke();
+    // poprzeczka
+    cCtx.lineWidth = 1.5;
+    cCtx.beginPath();
+    cCtx.moveTo(gx - 4.5, gy - 17.5); cCtx.lineTo(gx + 4.5, gy - 17.5);
+    cCtx.stroke();
+
+    // ── Ramię miotające ──
     cCtx.save();
-    cCtx.translate(cx, cy);
+    cCtx.translate(pos.pivotX, pos.pivotY);
     cCtx.rotate(aimAngle);
 
-    // Bow arc
-    cCtx.strokeStyle = '#8B4513'; cCtx.lineWidth = 2.5;
-    cCtx.beginPath();
-    cCtx.arc(0, 0, 14, -1.2, 1.2);
-    cCtx.stroke();
+    // belka ramienia
+    cCtx.strokeStyle = woodLight; cCtx.lineWidth = 3.5;
+    cCtx.lineCap = 'round';
+    cCtx.beginPath(); cCtx.moveTo(-9, 0); cCtx.lineTo(19, 0); cCtx.stroke();
+    cCtx.lineCap = 'butt';
 
-    // Bowstring
-    cCtx.strokeStyle = '#ccc'; cCtx.lineWidth = 1;
-    cCtx.beginPath();
-    cCtx.moveTo(14 * Math.cos(-1.2), 14 * Math.sin(-1.2));
-    cCtx.lineTo(0, 0);
-    cCtx.lineTo(14 * Math.cos(1.2), 14 * Math.sin(1.2));
-    cCtx.stroke();
+    // przeciwwaga
+    cCtx.fillStyle = '#4c4c52';
+    cCtx.beginPath(); cCtx.arc(-11, 0, 4, 0, Math.PI * 2); cCtx.fill();
+    cCtx.strokeStyle = '#2e2e33'; cCtx.lineWidth = 1;
+    cCtx.beginPath(); cCtx.arc(-11, 0, 4, 0, Math.PI * 2); cCtx.stroke();
 
-    // Arrow
-    cCtx.strokeStyle = '#654321'; cCtx.lineWidth = 1.5;
-    cCtx.beginPath(); cCtx.moveTo(-4, 0); cCtx.lineTo(20, 0); cCtx.stroke();
-    // Arrowhead
-    cCtx.fillStyle = '#888';
+    // kosz na pocisk
+    cCtx.fillStyle = woodDark;
     cCtx.beginPath();
-    cCtx.moveTo(20, 0); cCtx.lineTo(16, -3); cCtx.lineTo(16, 3);
-    cCtx.fill();
+    cCtx.moveTo(16, -6); cCtx.lineTo(24, -6); cCtx.lineTo(22, 1); cCtx.lineTo(18, 1);
+    cCtx.closePath(); cCtx.fill();
+
+    // załadowany głaz — tylko u gracza, który właśnie celuje
+    if (isActive) {
+        cCtx.fillStyle = cFireArrow ? '#c9440f' : '#6e6a63';
+        cCtx.beginPath(); cCtx.arc(20, -4, 3.4, 0, Math.PI * 2); cCtx.fill();
+        if (cFireArrow) {
+            cCtx.fillStyle = 'rgba(255,150,30,0.55)';
+            cCtx.beginPath(); cCtx.arc(20, -4, 6, 0, Math.PI * 2); cCtx.fill();
+        }
+    }
 
     cCtx.restore();
+
+    // ── Lina od ramienia do przodu podstawy ──
+    const armTipX = pos.pivotX + Math.cos(aimAngle) * -9;
+    const armTipY = pos.pivotY + Math.sin(aimAngle) * -9;
+    cCtx.strokeStyle = 'rgba(215,195,150,0.75)'; cCtx.lineWidth = 1;
+    cCtx.beginPath();
+    cCtx.moveTo(armTipX, armTipY);
+    cCtx.lineTo(gx - dir * 13, gy - 13);
+    cCtx.stroke();
 }
 
 function cDrawProjectile() {
@@ -1317,33 +1440,39 @@ function cDrawProjectile() {
             cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 2.5 * tp.life, 0, Math.PI * 2); cCtx.fill();
         });
     } else {
-        cCtx.fillStyle = 'rgba(180,140,80,0.4)';
+        cCtx.fillStyle = 'rgba(150,140,125,0.35)';
         cTrail.forEach(tp => {
-            cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 1.5 * tp.life, 0, Math.PI * 2); cCtx.fill();
+            cCtx.beginPath(); cCtx.arc(tp.x, tp.y, 2 * tp.life, 0, Math.PI * 2); cCtx.fill();
         });
     }
 
-    // Arrow in flight
-    const vx = cProjectile.vx, vy = cProjectile.vy;
-    const fAngle = Math.atan2(vy, vx);
-    cCtx.save();
-    cCtx.translate(cProjectile.x, cProjectile.y);
-    cCtx.rotate(fAngle);
-    // Shaft
-    cCtx.strokeStyle = isFire ? '#8B2500' : '#654321'; cCtx.lineWidth = 1.5;
-    cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(8, 0); cCtx.stroke();
-    // Head
-    cCtx.fillStyle = isFire ? '#ff4400' : '#888';
-    cCtx.beginPath(); cCtx.moveTo(8, 0); cCtx.lineTo(5, -2.5); cCtx.lineTo(5, 2.5); cCtx.fill();
-    // Fletching
-    cCtx.fillStyle = isFire ? '#ff6600' : '#cc4444';
-    cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(-7, -3); cCtx.lineTo(-7, 0); cCtx.fill();
-    cCtx.beginPath(); cCtx.moveTo(-10, 0); cCtx.lineTo(-7, 3); cCtx.lineTo(-7, 0); cCtx.fill();
-    // Fire glow
+    const px = cProjectile.x, py = cProjectile.y;
+
+    // Poświata ognistego głazu
     if (isFire) {
-        cCtx.fillStyle = 'rgba(255,100,0,0.4)';
-        cCtx.beginPath(); cCtx.arc(4, 0, 5, 0, Math.PI * 2); cCtx.fill();
+        const g = cCtx.createRadialGradient(px, py, 1, px, py, 12);
+        g.addColorStop(0, 'rgba(255,205,70,0.85)');
+        g.addColorStop(0.5, 'rgba(255,95,0,0.45)');
+        g.addColorStop(1, 'rgba(255,60,0,0)');
+        cCtx.fillStyle = g;
+        cCtx.beginPath(); cCtx.arc(px, py, 12, 0, Math.PI * 2); cCtx.fill();
     }
+
+    // Głaz — obraca się w locie
+    cProjectile.spin = (cProjectile.spin || 0) + 0.16;
+    cCtx.save();
+    cCtx.translate(px, py);
+    cCtx.rotate(cProjectile.spin);
+    cCtx.fillStyle = isFire ? '#7d2708' : '#6e6a63';
+    cCtx.beginPath();
+    cCtx.moveTo(-5, -2); cCtx.lineTo(-2, -5.5); cCtx.lineTo(3, -5);
+    cCtx.lineTo(5.5, -1); cCtx.lineTo(4, 4); cCtx.lineTo(-1, 5.5); cCtx.lineTo(-5, 3);
+    cCtx.closePath(); cCtx.fill();
+    // jaśniejsza fasetka
+    cCtx.fillStyle = isFire ? '#cf4a11' : '#8e8a82';
+    cCtx.beginPath();
+    cCtx.moveTo(-2, -4.5); cCtx.lineTo(2.5, -4); cCtx.lineTo(1, 0); cCtx.lineTo(-3, -1);
+    cCtx.closePath(); cCtx.fill();
     cCtx.restore();
 }
 
@@ -1361,7 +1490,7 @@ function cDraw() {
     cDrawTerrain();
     cDrawObstacles();
     cCastles.forEach((c, i) => cDrawCastle(c, i));
-    cCastles.forEach((_, i) => cDrawCannon(i));
+    cCastles.forEach((_, i) => cDrawCatapult(i));
     cDrawProjectile();
     cDrawParticles();
 }
@@ -1372,10 +1501,10 @@ function castleToggleArrow() {
     cFireArrow = !cFireArrow;
     const btn = document.getElementById('castle-arrow-btn');
     if (cFireArrow) {
-        btn.textContent = '🔥 Paląca (2)';
+        btn.textContent = '🔥 Ognisty głaz (2)';
         btn.className = 'castle-arrow-btn fire';
     } else {
-        btn.textContent = '🏹 Zwykła (1)';
+        btn.textContent = '🪨 Zwykły głaz (1)';
         btn.className = 'castle-arrow-btn';
     }
 }
@@ -1383,7 +1512,7 @@ function castleToggleArrow() {
 function cResetArrowToggle() {
     cFireArrow = false;
     const btn = document.getElementById('castle-arrow-btn');
-    btn.textContent = '🏹 Zwykła (1)';
+    btn.textContent = '🪨 Zwykły głaz (1)';
     btn.className = 'castle-arrow-btn';
 }
 
@@ -1395,7 +1524,7 @@ function castleToggleDir() {
 
 function cSetDefaultDir() {
     const c = cCastles[currentPlayerIdx];
-    cAimDir = (c.x + c.w / 2 < cW / 2) ? 1 : -1;
+    cAimDir = c.facing;
     document.getElementById('castle-dir-btn').textContent = cAimDir === -1 ? '← Lewo' : 'Prawo →';
 }
 
@@ -1464,15 +1593,14 @@ function castleFire() {
     p.shots -= cost;
     document.getElementById('castle-shots-left').textContent = p.shots;
 
-    const c = cCastles[currentPlayerIdx];
-    const cx = c.x + c.w / 2, cy = c.groundY - 28;
+    const pos = cCatapultPos(currentPlayerIdx);
     const angle = parseInt(document.getElementById('castle-angle').value);
     const power = parseInt(document.getElementById('castle-power').value) * 0.3;
     const rad = -angle * Math.PI / 180;
     const bx = Math.cos(rad) * cAimDir, by = Math.sin(rad);
 
     cProjectile = {
-        x: cx + bx * 24, y: cy + by * 24,
+        x: pos.pivotX + bx * 22, y: pos.pivotY + by * 22,
         vx: bx * power, vy: by * power,
         isFire: cFireArrow,
         damage: cFireArrow ? 2 : 1
@@ -1614,9 +1742,9 @@ function cEndGame(winnerIdx) {
     }
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    EKRAN KOŃCOWY
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 function showEndScreen() {
     clearInterval(timerInterval);
@@ -1643,9 +1771,9 @@ function backToSetup() {
     showScreen('setup-screen');
 }
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    KLAWIATURA
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 document.addEventListener('keydown', e => {
     const active = document.querySelector('.screen.active');
@@ -1691,8 +1819,8 @@ document.addEventListener('keydown', e => {
     }
 });
 
-/* ═══════════════════════════════════════════
+/* ════════════════════════════════════════════════
    INICJALIZACJA
-   ═══════════════════════════════════════════ */
+   ════════════════════════════════════════════════ */
 
 renderPlayerInputs();
